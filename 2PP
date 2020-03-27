@@ -71,7 +71,7 @@ Arduboy2 arduboy;
 #define MEMO 5
 #define MILL 6
 
-//using http://www.andrewlowndes.co.uk/blog/graphics/arduboy-image-converter
+//using https://teamarg.github.io/arduboy-image-converter/
 const unsigned char PROGMEM picture[] =
 {
 // width, height,
