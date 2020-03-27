@@ -70,7 +70,8 @@ Arduboy2 arduboy;
 #define REFLX 4
 #define MEMO 5
 #define MILL 6
- 
+
+//using http://www.andrewlowndes.co.uk/blog/graphics/arduboy-image-converter
 const unsigned char PROGMEM picture[] =
 {
 // width, height,
