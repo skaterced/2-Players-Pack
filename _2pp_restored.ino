@@ -41,7 +41,7 @@
                 If you only have 3 stones left, you can move not only by following the lines but where you want.
                 You win if your opponent has only 2 stones left OR if he is "stuck" with nowhere to move any of his stones.
                 Look up for "Nine Men's Morris" for more information
-        GO:     There are no rules check. Look up Wikipedia to lurn the rules
+    GO/CHESS:   There are no rules check. Look up Wikipedia to lurn the rules
           
           
       Hope you'll enjoy !
@@ -76,6 +76,30 @@ Arduboy2 arduboy;
 #define MILL 6
 #define GO 7
 #define CHESS 8
+
+#define CHESS_PION 0  // noir +2, pas sa couleur +1
+#define CHESS_CHEVAL 4
+
+const unsigned char chessPieces[] PROGMEM = {
+// width, height,
+8, 8,
+//pionB_N
+0x00,0x00,0x20,0x38,0x38,0x20,0x00,0x00,
+//pionB_B
+0xff,0xdf,0xa7,0xbb,0xbb,0xa7,0xdf,0xff,
+//pionN_B
+0xff,0xff,0xdf,0xc7,0xc7,0xdf,0xff,0xff,
+//pionN_N
+0x00,0x20,0x58,0x44,0x44,0x58,0x20,0x00,
+//chevalB_N
+0x00,0x40,0x78,0x7c,0x6c,0x48,0x00,0x00,
+//chevalB_B
+0xbf,0x47,0x7b,0x7d,0x6d,0x4b,0xb7,0xff,
+//chevalN_B
+0xff,0xbf,0x87,0x83,0x93,0xb7,0xff,0xff,
+//chevalN_N
+0x40,0xb8,0x84,0x82,0x92,0xb4,0x48,0x00
+};
  
 const unsigned char PROGMEM picture[] =
 {
@@ -124,15 +148,6 @@ byte  P1_RIGHT=DOWN_BUTTON;
 byte  P2_RIGHT=B_BUTTON;
 byte  P2_LEFT=A_BUTTON;
 
-/*
-  //Controls designed for Emulator
-bool forEmulator = true;
-byte P2_RIGHT=UP_BUTTON;
-byte P1_LEFT=A_BUTTON;
-byte P1_RIGHT=B_BUTTON;
-byte P2_LEFT=DOWN_BUTTON; 
-*/
- 
 class Player {
   public :
     int x,y;
@@ -149,6 +164,21 @@ Player::Player(int X, int Y)
   this->dir=0;
   this->score=0;
 }
+
+class ChessPiece {
+  public:
+    int i;
+    int type;
+    bool black;
+    bool selected;
+    void draw(void);
+    ChessPiece(int i_, int type_, bool black_){
+      i=i_;
+      type=type_;
+      black=black_;
+      selected=false;
+    }
+};
 class Balle {
   public :
     int x,y, vx,vy;
@@ -195,7 +225,9 @@ void Balle::stop(void){
   this->vx=0;
   this->vy=0;
 }
- 
+
+class ChessPiece pion(10,0,false);
+
 class Player p1(4,0);
 class Player p2(122,20);
 //class Balle balle();
@@ -295,6 +327,20 @@ int getIndice(int x, int y){ //TO DO
   temp+=(y-upBorder)/casesHeight*casesCol;//  divided by 11 multiplied by 11 (coincidence)
   return temp;
 }
+
+void ChessPiece::draw(){
+  int x= leftBorder+4+(i%casesCol)*casesLength;
+  int y= i/casesCol*casesHeight+1;//+upBorder+2;
+  int temp=0;
+  if (black){
+    temp+=2;
+  }
+  if (black==(0==i%2)){
+    temp+=1;
+  }
+  Sprites::drawOverwrite(x,y,chessPieces, type+temp);
+}
+
 void shuffle (int size){
   char c=0;
   int r1,r2=0;
@@ -320,7 +366,7 @@ void turnUpdate(void){ /////////////////////////////////////// score ///////////
   }
   else {
     arduboy.fillRect(0,0,26,64,0);
-    if(game!=GO){ //we don't knows who's turn it is in this game
+    if((game!=CHESS)&&(game!=GO)){ //we don't knows who's turn it is in this game
       if (p1Playing){
         arduboy.setCursor(1,6);
         arduboy.print("P1's");
@@ -381,12 +427,13 @@ bool checkPressed(bool down){
 }
 
 void drawSelector(int i){
-  int x=(i%7)*8+58;
-  int y=(i/7)*8+8;
-  arduboy.drawLine(x-4,y-4,x-2,y-2,0);
-  arduboy.drawLine(x-4,y+4,x-2,y+2,0);
-  arduboy.drawLine(x+2,y+2,x+4,y+4,0);
-  arduboy.drawLine(x+2,y-2,x+4,y-4,0);
+
+  int x=((i%casesRow)+1)*casesHeight+leftBorder;
+  int y=(i/casesCol)*casesHeight+upBorder;
+  arduboy.drawLine(x-4,y-4,x-2,y-2,blink? 1:0);
+  arduboy.drawLine(x-4,y+4,x-2,y+2,blink? 1:0);
+  arduboy.drawLine(x+2,y+2,x+4,y+4,blink? 1:0);
+  arduboy.drawLine(x+2,y-2,x+4,y-4,blink? 1:0);
 }
 int drawStone(int i, bool color){ //black 0 white 1
   int x=(i%7)*8+58;
@@ -561,7 +608,7 @@ bool checkRemoving (int color) { // check if one or more stone(s) is removable (
 }
  
 void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-  
+  arduboy.clear();
   if (0==game){
     arduboy.begin();
     arduboy.setFrameRate(60);
@@ -629,8 +676,14 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
       symbolArray[24]=4;
     }
   }
-  else {
-    arduboy.clear();
+  else if (CHESS==game){
+    p1.x=74;
+    p1.y=12;
+    casesCol=8;
+    casesRow=8;
+    casesHeight=8;
+    leftBorder=46;
+    upBorder=4;
   }
 }
  
@@ -738,6 +791,7 @@ void loop() { // -------------------------  Init loop --------------------------
     {
       switch (p1.y){
         case 0:
+        
           if (++difficulty==5)
             difficulty=1;
         break;
@@ -1280,9 +1334,8 @@ void loop() { // -------------------------  Init loop --------------------------
       blinkTimer=0;
       blink=!blink;
     }
-    if (blink){
-      drawSelector(getIndice(p1.x,p1.y));
-    }
+    drawSelector(getIndice(p1.x,p1.y));
+    
     if (temp>48)
       temp=0;
   }
@@ -1351,15 +1404,50 @@ void loop() { // -------------------------  Init loop --------------------------
       blinkTimer=0;
       blink=!blink;
     }
-    if (blink){
-      drawSelector(getIndice(p1.x,p1.y));
-    }
+    drawSelector(getIndice(p1.x,p1.y));
+    
     if (temp>48)
       temp=0;
   }  
   else if (CHESS==game){
+    arduboy.clear();
+    if (arduboy.justPressed(UP_BUTTON)){
+      if (p1.y>8){
+        p1.y-=8;
+      }
+    }
+    if (arduboy.justPressed(DOWN_BUTTON)){
+      if (p1.y<56){ 
+        p1.y+=8;
+      }
+    }
+    if (arduboy.justPressed(RIGHT_BUTTON)){
+      if (p1.x<106){
+        p1.x+=8;
+      }
+    }
+    if (arduboy.justPressed(LEFT_BUTTON)){
+      if (p1.x>50){
+        p1.x-=8;
+      }
+    }
+    p1.score=p1.x;
+    p2.score=p1.y;
+    
     turnUpdate();
     drawChessBoard();    
+    //Sprites::drawOverwrite(50,1,chessPieces, 5);
+    //Sprites::drawOverwrite(58,1,chessPieces, 4);
+    pion.draw();
+    
+    if (blinkTimer++>10){
+      blinkTimer=0;
+      blink=!blink;
+    }
+    drawSelector(getIndice(p1.x,p1.y));
+    
+    if (temp>48)
+      temp=0;    
   }
   else {
     arduboy.print("game not implemented yet");
