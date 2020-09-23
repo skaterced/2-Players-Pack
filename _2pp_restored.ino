@@ -77,8 +77,13 @@ Arduboy2 arduboy;
 #define GO 7
 #define CHESS 8
 
+#define NBCHESSPIECES 32
 #define CHESS_PION 0  // noir +2, pas sa couleur +1
 #define CHESS_CHEVAL 4
+#define CHESS_FOU 8
+#define CHESS_TOUR 12
+#define CHESS_DAME 16
+#define CHESS_ROI 20
 
 const unsigned char chessPieces[] PROGMEM = {
 // width, height,
@@ -98,7 +103,27 @@ const unsigned char chessPieces[] PROGMEM = {
 //chevalN_B
 0xff,0xbf,0x87,0x83,0x93,0xb7,0xff,0xff,
 //chevalN_N
-0x40,0xb8,0x84,0x82,0x92,0xb4,0x48,0x00
+0x40,0xb8,0x84,0x82,0x92,0xb4,0x48,0x00,
+//fou
+0x00,0x00,0x40,0x7c,0x7e,0x46,0x00,0x00,
+0xff,0xbf,0x43,0x7d,0x7e,0x46,0xb9,0xff,
+0xff,0xff,0xbf,0x83,0x81,0xb9,0xff,0xff,
+0x00,0x40,0xbc,0x82,0x81,0xb9,0x46,0x00,
+//tour
+0x00,0x06,0x7c,0x7e,0x7e,0x7c,0x06,0x00,
+0xf9,0x86,0x7d,0x7e,0x7e,0x7d,0x86,0xf9,
+0xff,0xf9,0x83,0x81,0x81,0x83,0xf9,0xff,
+0x06,0x79,0x82,0x81,0x81,0x82,0x79,0x06,
+//dame
+0x08,0x12,0x34,0x38,0x38,0x34,0x12,0x08,
+0xe9,0xd2,0xb5,0xbb,0xbb,0xb5,0xd2,0xe9,
+0xef,0xdb,0x97,0x8f,0x8f,0x97,0xdb,0xef,
+0x2c,0x5a,0x94,0x88,0x88,0x94,0x5a,0x2c,
+//roi
+0x00,0x00,0xf8,0xf2,0xff,0xf2,0xf8,0x00,
+0xff,0x03,0xfd,0xfa,0xff,0xfa,0xfd,0x03,
+0xff,0xff,0x07,0x0d,0x00,0x0d,0x07,0xff,
+0x00,0xfc,0x02,0x05,0x00,0x05,0x02,0xfc
 };
  
 const unsigned char PROGMEM picture[] =
@@ -170,15 +195,37 @@ class ChessPiece {
     int i;
     int type;
     bool black;
-    bool selected;
-    void draw(void);
+    //bool selected;
     ChessPiece(int i_, int type_, bool black_){
       i=i_;
       type=type_;
       black=black_;
-      selected=false;
+      //selected=false;
+    }
+    void draw(void){
+      int x= leftBorder+4+(i%casesCol)*casesLength;
+      int y= i/casesCol*casesHeight+1;//+upBorder+2;
+      int temp=0;
+      bool caseIsBlack=true;
+      if ((i%casesCol>3)&&(0==(i%casesCol+i/casesCol)%2))
+        caseIsBlack=false;
+      if ((selectedI!=i)||(blink)){
+        if (black){
+          temp+=2;
+          if (caseIsBlack){
+            temp++;
+          }
+        }
+        else {
+          if (!caseIsBlack){
+            temp++;
+          }
+        }
+        Sprites::drawOverwrite(x,y,chessPieces, type+temp);
+      }
     }
 };
+
 class Balle {
   public :
     int x,y, vx,vy;
@@ -226,7 +273,14 @@ void Balle::stop(void){
   this->vy=0;
 }
 
-class ChessPiece pion(10,0,false);
+class ChessPiece pieces[NBCHESSPIECES]={ChessPiece(19,CHESS_PION,false),ChessPiece(16,CHESS_PION,false),ChessPiece(17,CHESS_PION,false),ChessPiece(18,CHESS_PION,false),
+                                        ChessPiece(20,CHESS_PION,false),ChessPiece(21,CHESS_PION,false),ChessPiece(22,CHESS_PION,false),ChessPiece(23,CHESS_PION,false),                                        
+                                        ChessPiece(4,CHESS_TOUR,false),ChessPiece(5,CHESS_CHEVAL,false),ChessPiece(6,CHESS_FOU,false),ChessPiece(7,CHESS_ROI,false),
+                                        ChessPiece(11,CHESS_TOUR,false),ChessPiece(10,CHESS_CHEVAL,false),ChessPiece(9,CHESS_FOU,false),ChessPiece(8,CHESS_DAME,false),
+                                        ChessPiece(79,CHESS_PION,true),ChessPiece(76,CHESS_PION,true),ChessPiece(77,CHESS_PION,true),ChessPiece(78,CHESS_PION,true),
+                                        ChessPiece(80,CHESS_PION,true),ChessPiece(81,CHESS_PION,true),ChessPiece(82,CHESS_PION,true),ChessPiece(83,CHESS_PION,true),
+                                        ChessPiece(88,CHESS_TOUR,true),ChessPiece(89,CHESS_CHEVAL,true),ChessPiece(90,CHESS_FOU,true),ChessPiece(91,CHESS_ROI,true),
+                                        ChessPiece(95,CHESS_TOUR,true),ChessPiece(94,CHESS_CHEVAL,true),ChessPiece(93,CHESS_FOU,true),ChessPiece(92,CHESS_DAME,true)};
 
 class Player p1(4,0);
 class Player p2(122,20);
@@ -239,6 +293,7 @@ char symbolArray [66]={(char)228,(char)228 ,(char)15,(char)15,(char)10,(char)10,
                       (char)247,(char)247,(char)12,/*->medium*/(char)234,(char)18,(char)18,(char)2,(char)2,(char)20,(char)20,(char)234,
                       (char)38,(char)38,(char)5,(char)5,(char)24,(char)24,/*->hard*/(char)36,(char)36,(char)37,(char)37,(char)237,
                       (char)156,(char)156,(char)174,(char)174,(char)4,(char)4,(char)155,(char)155,(char)157,(char)157,(char)237};
+                      
 void newTraceGame(void){
   arduboy.clear();
   arduboy.setCursor(40,30);
@@ -259,16 +314,16 @@ void newTraceGame(void){
 void newReflXGame(void){
   arduboy.clear();
   arduboy.setCursor(0,0);
-  arduboy.print("Next Round :");
+  arduboy.print(F("Next Round :"));
   arduboy.drawChar(1,11,24,1,0,1);
   arduboy.drawChar(8,11,25,1,0,1);
   arduboy.setCursor(16,11);
   if (random(100)>=50){
-    arduboy.print(" are normal");
+    arduboy.print(F(" are normal"));
     arrowInverted=false;
   }
   else{
-    arduboy.print(" are inverted");
+    arduboy.print(F(" are inverted"));
     arrowInverted=true;
   }
   arduboy.fillRect(0,21,15,8,1);
@@ -276,17 +331,17 @@ void newReflXGame(void){
   arduboy.drawChar(8,21,25,0,1,1);
   arduboy.setCursor(16,20);
   if (random(100)>=50){
-    arduboy.print(" are normal");
+    arduboy.print(F(" are normal"));
     boldArrowInverted=false;
   }
   else{
-    arduboy.print(" are inverted");
+    arduboy.print(F(" are inverted"));
     boldArrowInverted=true;
   }
   arduboy.setCursor(0,45);
-  arduboy.print("Press both 'down'");
+  arduboy.print(F("Press both 'down'"));
   arduboy.setCursor(0,55);
-  arduboy.print("buttons when ready");
+  arduboy.print(F("buttons when ready"));
   arduboy.display();
   while (!(arduboy.pressed(P1_RIGHT)&&arduboy.pressed(P2_LEFT))){
     delay(10);
@@ -324,21 +379,9 @@ void drawCard(int i, byte face){ //2: symbol, 1: back, other: empty
 int getIndice(int x, int y){ //TO DO
   //arduboy.fillRect(x+1,y+1,7,10,fill);
   int temp=(x-leftBorder)/casesLength;
-  temp+=(y-upBorder)/casesHeight*casesCol;//  divided by 11 multiplied by 11 (coincidence)
+  temp+=(y-upBorder)/casesHeight*casesCol;
+  //arduboy.print(temp);
   return temp;
-}
-
-void ChessPiece::draw(){
-  int x= leftBorder+4+(i%casesCol)*casesLength;
-  int y= i/casesCol*casesHeight+1;//+upBorder+2;
-  int temp=0;
-  if (black){
-    temp+=2;
-  }
-  if (black==(0==i%2)){
-    temp+=1;
-  }
-  Sprites::drawOverwrite(x,y,chessPieces, type+temp);
 }
 
 void shuffle (int size){
@@ -388,7 +431,7 @@ void turnUpdate(void){ /////////////////////////////////////// score ///////////
   if ((GO==game)||(MILL==game)){
     if (removing){
       arduboy.setCursor(1,30);
-      arduboy.print("Removing");
+      arduboy.print(F("Removing"));
     }
     arduboy.drawCircle(22,27,3,1);
     arduboy.fillCircle(22,60,3,1);
@@ -428,7 +471,7 @@ bool checkPressed(bool down){
 
 void drawSelector(int i){
 
-  int x=((i%casesRow)+1)*casesHeight+leftBorder;
+  int x=((i%casesCol)+1)*casesLength+leftBorder;
   int y=(i/casesCol)*casesHeight+upBorder;
   arduboy.drawLine(x-4,y-4,x-2,y-2,blink? 1:0);
   arduboy.drawLine(x-4,y+4,x-2,y+2,blink? 1:0);
@@ -460,7 +503,7 @@ void drawGo(void){
   }
 }
 void drawChessBoard(void){
-  arduboy.drawRect(50,0,65,65,1);
+  arduboy.drawRect(49,0,66,64,1);
   for(int i=0; i<4; i++){
     for(int j=0; j<4; j++){
       arduboy.fillRect(50+16*i,1+16*j,8,8,1);
@@ -679,10 +722,11 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
   else if (CHESS==game){
     p1.x=74;
     p1.y=12;
-    casesCol=8;
+    casesCol=12;
     casesRow=8;
     casesHeight=8;
-    leftBorder=46;
+    casesLength=8;
+    leftBorder=14;
     upBorder=4;
   }
 }
@@ -703,34 +747,34 @@ void loop() { // -------------------------  Init loop --------------------------
   if (MENU==game){  
     timer++;
     arduboy.drawBitmap(0,0,picture,128,48,WHITE);
-    arduboy.drawChar(2,50,17,1,0,1);
+    //arduboy.drawChar(2,50,17,1,0,1);
     arduboy.setCursor(10,49);
     switch(p1.x){
       case (PONG):
-        arduboy.print("      Pong -----");
+        arduboy.print("      Pong  ->");
       break;
       case (TRACE):
-        arduboy.print("    - Trace ---");
+        arduboy.print("  <-  Trace ->");
       break;
       case (REFLX):
-        arduboy.print("   -- ReflX --");
+        arduboy.print("  <-  ReflX ->");
       break;
       case (MEMO):
-        arduboy.print("  --- Memo -");
+        arduboy.print("  <-  Memo  ->");
       break;
       case (MILL):
-        arduboy.print(" ---- Mill");
+        arduboy.print("  <-  Mill  ->");
       break;
       case (GO):
-        arduboy.print(" -----  Go");
+        arduboy.print("  <-   Go   ->");
       break;   
       case (CHESS):
-        arduboy.print(" ----Chess");
+        arduboy.print("  <-  Chess");
       break;      
     }
     //arduboy.print(TRACE_FPS);
     
-    arduboy.drawChar(120,50,16,1,0,1);
+    //arduboy.drawChar(120,50,16,1,0,1);
     arduboy.setCursor(1,57);
     arduboy.print("A: Select    B: Param");
   
@@ -767,8 +811,8 @@ void loop() { // -------------------------  Init loop --------------------------
     arduboy.setCursor(10,20);
     arduboy.print("Controls : " );
     arduboy.print(forEmulator ? "PC":"Arduboy");
-    arduboy.setCursor(10,40);
-    arduboy.print("No sound");
+    arduboy.setCursor(0,40);
+    arduboy.print("WWW.Github.com/skaterced");
     arduboy.setCursor(1,55);
     arduboy.print("A: Change    B: Back");
     
@@ -1409,7 +1453,7 @@ void loop() { // -------------------------  Init loop --------------------------
     if (temp>48)
       temp=0;
   }  
-  else if (CHESS==game){
+  else if (CHESS==game){  // ######################################################### Chess ###############################
     arduboy.clear();
     if (arduboy.justPressed(UP_BUTTON)){
       if (p1.y>8){
@@ -1427,18 +1471,45 @@ void loop() { // -------------------------  Init loop --------------------------
       }
     }
     if (arduboy.justPressed(LEFT_BUTTON)){
-      if (p1.x>50){
+      if (p1.x>18){
         p1.x-=8;
       }
     }
-    p1.score=p1.x;
-    p2.score=p1.y;
+    if (arduboy.justPressed(B_BUTTON)){
+      selectedI=-1;
+      selected=false;
+    }
+    if (arduboy.justPressed(A_BUTTON)){
+      int selI=getIndice(p1.x,p1.y);
+      if (!selected){
+        for (int i=0; i<NBCHESSPIECES; i++){
+          if (pieces[i].i==selI){
+            selected=true;
+            selectedI=selI;
+            break;  
+          }
+        }
+      }
+      else{
+        for (int i=0; i<NBCHESSPIECES; i++){
+          if (pieces[i].i==selectedI){        // Piece is put down
+            // todo check if someone's already here
+            pieces[i].i=selI;
+            selected=false;
+            selectedI=-1;
+            break;  
+          }
+        //todo plein de truc
+        }
+      }
+    }
+    //p1.score=p1.x;
+    //p2.score=p1.y;
     
-    turnUpdate();
     drawChessBoard();    
-    //Sprites::drawOverwrite(50,1,chessPieces, 5);
-    //Sprites::drawOverwrite(58,1,chessPieces, 4);
-    pion.draw();
+    for (int i=0; i<NBCHESSPIECES; i++){
+      pieces[i].draw();
+    }
     
     if (blinkTimer++>10){
       blinkTimer=0;
@@ -1446,12 +1517,10 @@ void loop() { // -------------------------  Init loop --------------------------
     }
     drawSelector(getIndice(p1.x,p1.y));
     
-    if (temp>48)
-      temp=0;    
+    arduboy.drawLine(49,0,49,64,1); 
   }
   else {
-    arduboy.print("game not implemented yet");
+    //arduboy.print("game not implemented yet");
   }
   arduboy.display();
 }
-
