@@ -469,9 +469,31 @@ bool checkPressed(bool down){
   }
 }
 
-void drawSelector(int i){
+void SelectorManagment(void){
+    if (arduboy.justPressed(UP_BUTTON)){
+      if (p1.y>=upBorder+casesHeight){
+        p1.y-=casesHeight;
+      }
+    }
+    if (arduboy.justPressed(DOWN_BUTTON)){
+      if (p1.y<(upBorder+(casesRow-1)*casesHeight)){ 
+        p1.y+=casesHeight;
+      }
+    }
+    if (arduboy.justPressed(RIGHT_BUTTON)){
+      if (p1.x<(leftBorder+(casesRow-1)*casesLength)){
+        p1.x+=casesLength;
+      }
+    }
+    if (arduboy.justPressed(LEFT_BUTTON)){
+      if (p1.x>=(leftBorder+casesLength)){
+        p1.x-=casesLength;
+      }
+    }
+}
 
-  int x=((i%casesCol)+1)*casesLength+leftBorder;
+void drawSelector(int i){
+  int x=(i%casesCol)*casesLength+leftBorder;
   int y=(i/casesCol)*casesHeight+upBorder;
   arduboy.drawLine(x-4,y-4,x-2,y-2,blink? 1:0);
   arduboy.drawLine(x-4,y+4,x-2,y+2,blink? 1:0);
@@ -479,8 +501,8 @@ void drawSelector(int i){
   arduboy.drawLine(x+2,y-2,x+4,y-4,blink? 1:0);
 }
 int drawStone(int i, bool color){ //black 0 white 1
-  int x=(i%7)*8+58;
-  int y=(i/7)*8+8;
+  int x=(i%casesCol)*casesLength+leftBorder;
+  int y=(i/casesCol)*casesHeight+upBorder;
   arduboy.fillCircle(x,y,3,0);
   if (color){
     arduboy.fillCircle(x,y,2,1);
@@ -496,10 +518,10 @@ void drawMill(void){
   arduboy.fillRect(75,25,15,15,1);  
 }
 void drawGo(void){
-  arduboy.fillRect(50,0,65,65,1);
-  for (int i=0; i<7; i++){
-    arduboy.drawLine(58+i*8,8,58+i*8,56,0);
-    arduboy.drawLine(58,8+i*8,105,8+i*8,0);
+  arduboy.fillRect(38,0,73,65,1);
+  for (int i=0; i<casesCol; i++){
+    arduboy.drawLine(leftBorder+i*casesLength,0,leftBorder+i*casesLength,65,0); //vert
+    arduboy.drawLine(leftBorder,upBorder+i*casesHeight,105,upBorder+i*casesHeight,0); //hz
   }
 }
 void drawChessBoard(void){
@@ -693,18 +715,18 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
     }
     turnUpdate();
   }
-  else if ((GO==game)||(MILL==game)){
+  else if (MILL==game){
     p1.score=p1.length=9; //Score is the nb of stone to put down. length is the total number of stones per player
     p2.score=p2.length=9;
     if (GO==game){
       p1.score=p2.score=0;
     }
-    p1.x=50;
+    p1.x=58;
     p1.y=8;
     casesCol=7;
     casesRow=7;
     casesHeight=8;
-    leftBorder=50;
+    leftBorder=58;
     upBorder=8;
     for (int i=0; i<49; i++){ //block the invalid places for Mill
       if ((((0==i%7)||(6==i%7))&&((i/7==0)||(i/7==6)))||
@@ -719,6 +741,15 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
       symbolArray[24]=4;
     }
   }
+  else if (GO==game){
+    p1.x=50;
+    p1.y=8;
+    casesCol=9;
+    casesRow=9;
+    casesHeight=8;
+    leftBorder=42;
+    upBorder=0;
+  }  
   else if (CHESS==game){
     p1.x=74;
     p1.y=12;
@@ -811,9 +842,9 @@ void loop() { // -------------------------  Init loop --------------------------
     arduboy.setCursor(10,20);
     arduboy.print("Controls : " );
     arduboy.print(forEmulator ? "PC":"Arduboy");
-    arduboy.setCursor(0,40);
-    arduboy.print("WWW.Github.com/skaterced");
-    arduboy.setCursor(1,55);
+    arduboy.setCursor(0,55);
+    arduboy.print("WW.Github.com/skaterced");
+    arduboy.setCursor(1,40);
     arduboy.print("A: Change    B: Back");
     
     arduboy.drawChar(0,p1.y*10+10,16,1,0,1);
@@ -1235,7 +1266,7 @@ void loop() { // -------------------------  Init loop --------------------------
   }
   
   else if (MILL==game){  // -----------------++--+--++-+-------+-----+-+----++ MILL ++--+-++--++--++--+---++-++
-    if (arduboy.justPressed(UP_BUTTON)){
+    /*if (arduboy.justPressed(UP_BUTTON)){
       if (p1.y>8){
         p1.y-=8;
       }
@@ -1254,7 +1285,8 @@ void loop() { // -------------------------  Init loop --------------------------
       if (p1.x>50){
         p1.x-=8;
       }
-    }
+    }*/
+    SelectorManagment();
     if (arduboy.justPressed(B_BUTTON)){
       selected=false;
       selectedI=-1;
@@ -1384,7 +1416,8 @@ void loop() { // -------------------------  Init loop --------------------------
       temp=0;
   }
   else if (GO==game){  // -----------------++--+--++-+-------+-----+-+----++ GO ++--+-++--++--++--+---++-++
-    if (arduboy.justPressed(UP_BUTTON)){
+    arduboy.clear();
+    /*if (arduboy.justPressed(UP_BUTTON)){
       if (p1.y>8){
         p1.y-=8;
       }
@@ -1403,7 +1436,8 @@ void loop() { // -------------------------  Init loop --------------------------
       if (p1.x>50){
         p1.x-=8;
       }
-    }
+    }*/
+    SelectorManagment();
     if (arduboy.justPressed(B_BUTTON)){
       int temp=getIndice(p1.x,p1.y);
       switch (symbolArray[temp]){        
@@ -1475,6 +1509,7 @@ void loop() { // -------------------------  Init loop --------------------------
         p1.x-=8;
       }
     }
+    //SelectorManagment();
     if (arduboy.justPressed(B_BUTTON)){
       selectedI=-1;
       selected=false;
