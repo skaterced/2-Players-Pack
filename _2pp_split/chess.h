@@ -68,7 +68,7 @@ class ChessPiece {
       //selected=false;
     }
     void draw(void){
-      int x= leftBorder+4+(i%casesCol)*casesLength;
+      int x= leftBorder-4+(i%casesCol)*casesLength;
       int y= i/casesCol*casesHeight+1;//+upBorder+2;
       int temp=0;
       bool caseIsBlack=true;
@@ -111,7 +111,8 @@ void drawChessBoard(void){
   }
 }
 
-playChess(){
+void playChess(){
+  /*
   if (arduboy.justPressed(UP_BUTTON)){
     if (p1.y>8){
       p1.y-=8;
@@ -131,8 +132,8 @@ playChess(){
     if (p1.x>18){
       p1.x-=8;
     }
-  }
-  //SelectorManagment();
+  }*/
+  SelectorManagment();
   if (arduboy.justPressed(B_BUTTON)){
     selectedI=-1;
     selected=false;
@@ -178,4 +179,3 @@ playChess(){
 }
 
 #endif
-

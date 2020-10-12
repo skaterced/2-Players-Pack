@@ -57,7 +57,7 @@
 #include "function.h"
 
 #include "chess.h"
-#include "go.h";
+#include "go.h"
 
 //Arduboy2 arduboy;
  
@@ -296,24 +296,24 @@ bool checkMill(int ind, int color){ //check if same line (or col) as ind, has tw
     if (ind%7==i%7){
       if (i%7==3) {
         if ((24-i)*(24-ind)>0){ // check if the 3 stones are on the same side 
-          if (symbolArray[i]==color)
+          if (stoneArray[i]==color)
             xC++;
         }
       }
       else {
-        if (symbolArray[i]==color)
+        if (stoneArray[i]==color)
           xC++;
       }
     }
     if (ind/7==i/7) { // check rows
       if (i/7==3){
         if ((24-i)*(24-ind)>0){ // check if the 3 stones are on the same side 
-          if (symbolArray[i]==color)
+          if (stoneArray[i]==color)
             xR++;
         }
       }   
       else {
-        if (symbolArray[i]==color)
+        if (stoneArray[i]==color)
           xR++;
       }
     }
@@ -321,7 +321,7 @@ bool checkMill(int ind, int color){ //check if same line (or col) as ind, has tw
   return ((xR==3)||(xC==3));
 }
 bool checkLegalMove(int i1, int i2, bool canJump){
-  if (symbolArray[i2]!=EMPTY){
+  if (stoneArray[i2]!=EMPTY){
     return false;
   }
   if (canJump){
@@ -344,7 +344,7 @@ bool checkLegalMove(int i1, int i2, bool canJump){
         return true;
       }
     }
-    else if (temp==3){ // temp==3 symbolArray[22]=4
+    else if (temp==3){ // temp==3 stoneArray[22]=4
       if (abs(i1-i2)==1){
         return true;
       }
@@ -367,7 +367,7 @@ bool checkLegalMove(int i1, int i2, bool canJump){
         return true;
       }
     }
-    else if (temp==3){ // temp==3 symbolArray[22]=4
+    else if (temp==3){ // temp==3 stoneArray[22]=4
       if (abs(i1/7-i2/7)==1){
         return true;
       }
@@ -378,7 +378,7 @@ bool checkLegalMove(int i1, int i2, bool canJump){
 bool checkLose(int color){
   int temp=0;
   for (int i=0;i<49;i++){
-    if (symbolArray[i]==color){
+    if (stoneArray[i]==color){
       temp++;
       for (int j=0;j<49;j++){
         if (checkLegalMove(i,j,false)) { 
@@ -394,7 +394,7 @@ bool checkLose(int color){
 }
 bool checkRemoving (int color) { // check if one or more stone(s) is removable (not in a mill)
   for (int i=0;i<49;i++){
-    if (symbolArray[i]==color){
+    if (stoneArray[i]==color){
       if (!checkMill(i,color)){
         return true;
       }
@@ -438,7 +438,7 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
     p1.y=upBorder;    
     int temp=casesCol*casesRow;
     for (int i=temp; i<66; i++){
-      symbolArray[i]=0;
+      stoneArray[i]=0;
     }
     shuffle(temp);
     for (int i=0; i<temp; i++){
@@ -461,13 +461,13 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
          (((1==i%7)||(5==i%7))&&((i/7==1)||(i/7==5)))||
          (((2==i%7)||(4==i%7))&&((i/7==2)||(i/7==4)))||
          (i/7==3)||(i%7==3)  )    {
-        symbolArray[i]=EMPTY;
+        stoneArray[i]=EMPTY;
       }
       else {
-        symbolArray[i]=4;
+        stoneArray[i]=4;
       }
     }
-    symbolArray[24]=4;
+    stoneArray[24]=4;
   }
   else if (GO==game){
     p1.x=50;
@@ -477,7 +477,7 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
     casesHeight=8;
     leftBorder=42;
     upBorder=0;
-  }  
+  }
   else if (CHESS==game){
     p1.x=74;
     p1.y=12;
@@ -485,7 +485,7 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
     casesRow=8;
     casesHeight=8;
     casesLength=8;
-    leftBorder=14;
+    leftBorder=22;
     upBorder=4;
   }
 }
@@ -926,8 +926,7 @@ void loop() { // -------------------------  Init loop --------------------------
       if (p1.x>leftBorder){
         drawCurs(p1.x,p1.y,false);
         p1.x-=casesLength;
-      }
-      
+      }      
     }
     if (arduboy.justPressed(A_BUTTON)){
       int temp=0;
@@ -935,7 +934,7 @@ void loop() { // -------------------------  Init loop --------------------------
         
         if(selectedI!=getIndice(p1.x,p1.y)){
           selectedI=getIndice(p1.x,p1.y);
-          if (symbolArray[selectedI]!=0){
+          if (stoneArray[selectedI]!=0){
             drawCard(selectedI,1);
             selected=true;
           }
@@ -943,12 +942,12 @@ void loop() { // -------------------------  Init loop --------------------------
       }
       else { //if (selected){
         temp=getIndice(p1.x,p1.y);
-        if ((temp!=selectedI)&&(symbolArray[temp]!=0)){
+        if ((temp!=selectedI)&&(stoneArray[temp]!=0)){
           drawCard(temp,1);
           arduboy.display();
           delay(MEMO_WAIT);
-          if (symbolArray[temp]==symbolArray[selectedI]){ // win a point
-            symbolArray[temp]=symbolArray[selectedI]=0;
+          if (stoneArray[temp]==stoneArray[selectedI]){ // win a point
+            stoneArray[temp]=stoneArray[selectedI]=0;
            drawCard(temp,0);
             drawCard(selectedI,0);
             arduboy.display();
@@ -971,7 +970,7 @@ void loop() { // -------------------------  Init loop --------------------------
                 arduboy.print(F(" wins"));
               }
               arduboy.display();
-              while("why write a symbolArrayInit when you can infite loop and reset"); 
+              while("why write a stoneArrayInit when you can infite loop and reset"); 
             }
           }
           else {  //2nd card is different
@@ -1022,9 +1021,9 @@ void loop() { // -------------------------  Init loop --------------------------
     if (arduboy.justPressed(A_BUTTON)){
       int temp=getIndice(p1.x,p1.y);
       if (removing){
-        if ((!checkMill(temp,p1Playing? WHITE_STONE : BLACK_STONE))&&(symbolArray[temp]==p1Playing? WHITE_STONE : BLACK_STONE)){
+        if ((!checkMill(temp,p1Playing? WHITE_STONE : BLACK_STONE))&&(stoneArray[temp]==(p1Playing? WHITE_STONE : BLACK_STONE))){
           removing=false;
-          symbolArray[temp]=EMPTY;
+          stoneArray[temp]=EMPTY;
           if (p1Playing){
             p2.length--;
             if (p2.length<3){
@@ -1049,7 +1048,7 @@ void loop() { // -------------------------  Init loop --------------------------
       else if (p1.score+p2.score>0){
         if (checkLegalMove(0,temp,true)){
           if (p1Playing){
-            symbolArray[temp]= BLACK_STONE ;
+            stoneArray[temp]= BLACK_STONE ;
             p1.score--;
             if (checkMill(temp,BLACK_STONE)){
               if (checkRemoving(WHITE_STONE)){
@@ -1067,7 +1066,7 @@ void loop() { // -------------------------  Init loop --------------------------
             }
           }
           else {
-            symbolArray[temp]= WHITE_STONE ;
+            stoneArray[temp]= WHITE_STONE ;
             p2.score--;
             if (checkMill(temp,WHITE_STONE)){
               if (checkRemoving(BLACK_STONE)){
@@ -1088,15 +1087,15 @@ void loop() { // -------------------------  Init loop --------------------------
       }
       else  {
         if (!selected){
-          if (((p1Playing)&&symbolArray[temp]==BLACK_STONE)||((!p1Playing)&&symbolArray[temp]==WHITE_STONE)){
+          if (((p1Playing)&&stoneArray[temp]==BLACK_STONE)||((!p1Playing)&&stoneArray[temp]==WHITE_STONE)){
             selectedI=temp;
             selected=true;
           }
         }
         else {
           if (checkLegalMove(selectedI,temp,p1Playing? p1.length==3:p2.length==3)){
-            symbolArray[temp]=symbolArray[selectedI];
-            symbolArray[selectedI]=EMPTY;
+            stoneArray[temp]=stoneArray[selectedI];
+            stoneArray[selectedI]=EMPTY;
             selectedI=-1;
             selected=false;
             if (checkMill(temp,p1Playing? BLACK_STONE : WHITE_STONE )){

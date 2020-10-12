@@ -24,19 +24,19 @@ void drawStones(void){
   for (int i=0; i<49; i++){
     if (i==selectedI){
       if (blink) {
-        if (BLACK_STONE==symbolArray[i]){
+        if (BLACK_STONE==stoneArray[i]){
           drawStone(i,0);
         }
-        else if (WHITE_STONE==symbolArray[i]){
+        else if (WHITE_STONE==stoneArray[i]){
           drawStone(i,1);
         }
       }
     }
     else {
-      if (BLACK_STONE==symbolArray[i]){
+      if (BLACK_STONE==stoneArray[i]){
       drawStone(i,0);
       }
-      else if (WHITE_STONE==symbolArray[i]){
+      else if (WHITE_STONE==stoneArray[i]){
         drawStone(i,1);
       }
     }
@@ -54,7 +54,7 @@ void SelectorManagment(void){
       }
     }
     if (arduboy.justPressed(RIGHT_BUTTON)){
-      if (p1.x<(leftBorder+(casesRow-1)*casesLength)){
+      if (p1.x<(leftBorder+(casesCol-1)*casesLength)){
         p1.x+=casesLength;
       }
     }
@@ -116,4 +116,3 @@ void turnUpdate(void){ /////////////////////////////////////// score ///////////
   }
 }
 #endif
-

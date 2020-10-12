@@ -14,7 +14,7 @@ void drawGo(void){
   }
 }
 
-playGo(){
+void playGo(){
 /*if (arduboy.justPressed(UP_BUTTON)){
       if (p1.y>8){
         p1.y-=8;
@@ -38,36 +38,36 @@ playGo(){
     SelectorManagment();
     if (arduboy.justPressed(B_BUTTON)){
       int temp=getIndice(p1.x,p1.y);
-      switch (symbolArray[temp]){        
+      switch (stoneArray[temp]){        
         case WHITE_STONE :
-          symbolArray[temp]= 0;
+          stoneArray[temp]= 0;
           p2.score--;
         break;
         case BLACK_STONE :
-          symbolArray[temp]= WHITE_STONE;
+          stoneArray[temp]= WHITE_STONE;
           p1.score--;
           p2.score++;
         break; 
         default :
-          symbolArray[temp]= WHITE_STONE;          
+          stoneArray[temp]= WHITE_STONE;          
           p2.score++;
         break;       
       }
     }
     if (arduboy.justPressed(A_BUTTON)){
       int temp=getIndice(p1.x,p1.y);
-      switch (symbolArray[temp]){
+      switch (stoneArray[temp]){
         case BLACK_STONE :
-          symbolArray[temp]= 0;
+          stoneArray[temp]= 0;
           p1.score--;
         break;
         case WHITE_STONE :
-          symbolArray[temp]= BLACK_STONE;
+          stoneArray[temp]= BLACK_STONE;
           p2.score--;
           p1.score++;
         break;
         default :
-          symbolArray[temp]= BLACK_STONE;          
+          stoneArray[temp]= BLACK_STONE;          
           p1.score++;
         break;
       }
@@ -85,4 +85,3 @@ playGo(){
   }
 
 #endif
-
