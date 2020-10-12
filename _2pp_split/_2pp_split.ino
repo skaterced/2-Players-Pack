@@ -56,7 +56,8 @@
 #include "globals.h"
 #include "function.h"
 
-//#include "chess.h"
+#include "chess.h"
+#include "go.h";
 
 //Arduboy2 arduboy;
  
@@ -69,8 +70,7 @@
 #define PRESSED_UP false
 #define MEMO_WAIT 3000
 #define EMPTY 0
-#define BLACK_STONE 1 // (P1)
-#define WHITE_STONE 2 // (P2)
+
 
 #define NBGAMES 7
  
@@ -152,12 +152,6 @@ void Balle::stop(void){
 //class Balle balle();
 class Balle balle(12,20,1,-2);
 //balle.init(); // Y U no work ???!!
-char symbolArray [66]={(char)228,(char)228 ,(char)15,(char)15,(char)10,(char)10,(char)14,(char)14,(char)232,(char)168,(char)197,
-                      (char)225,(char)225,(char)240,(char)240,(char)175,(char)175,(char)206,(char)206,(char)232,(char)168,(char)197,
-                      (char)64,(char)64,(char)35,(char)35,(char)236,(char)236,(char)25,(char)3,(char)3,(char)25,(char)12,
-                      (char)247,(char)247,(char)12,/*->medium*/(char)234,(char)18,(char)18,(char)2,(char)2,(char)20,(char)20,(char)234,
-                      (char)38,(char)38,(char)5,(char)5,(char)24,(char)24,/*->hard*/(char)36,(char)36,(char)37,(char)37,(char)237,
-                      (char)156,(char)156,(char)174,(char)174,(char)4,(char)4,(char)155,(char)155,(char)157,(char)157,(char)237};
                       
 void newTraceGame(void){
   arduboy.clear();
@@ -285,14 +279,6 @@ bool checkPressed(bool down){
   }
 }
 
-int drawStone(int i, bool color){ //black 0 white 1
-  int x=(i%casesCol)*casesLength+leftBorder;
-  int y=(i/casesCol)*casesHeight+upBorder;
-  arduboy.fillCircle(x,y,3,0);
-  if (color){
-    arduboy.fillCircle(x,y,2,1);
-  }
-}
 void drawMill(void){
   arduboy.fillRect(50,0,65,65,1);
   arduboy.drawRect(58,8,49,49,0);
@@ -302,43 +288,14 @@ void drawMill(void){
   arduboy.drawLine(58,32,105,32,0);
   arduboy.fillRect(75,25,15,15,1);  
 }
-void drawGo(void){
-  arduboy.fillRect(38,0,73,65,1);
-  for (int i=0; i<casesCol; i++){
-    arduboy.drawLine(leftBorder+i*casesLength,0,leftBorder+i*casesLength,65,0); //vert
-    arduboy.drawLine(leftBorder,upBorder+i*casesHeight,105,upBorder+i*casesHeight,0); //hz
-  }
-}
 
-void drawStones(void){
-  for (int i=0; i<49; i++){
-    if (i==selectedI){
-      if (blink) {
-        if (BLACK_STONE==symbolArray[i]){
-          drawStone(i,0);
-        }
-        else if (WHITE_STONE==symbolArray[i]){
-          drawStone(i,1);
-        }
-      }
-    }
-    else {
-      if (BLACK_STONE==symbolArray[i]){
-      drawStone(i,0);
-      }
-      else if (WHITE_STONE==symbolArray[i]){
-        drawStone(i,1);
-      }
-    }
-  }
-}
 bool checkMill(int ind, int color){ //check if same line (or col) as ind, has two other same colored stones
   uint8_t xR,xC=0;
-  int temp=0;
+  //int temp=0;
   for (int i=0; i<49; i++){ // check col.
     if (ind%7==i%7){
       if (i%7==3) {
-        if ((24-i)*(24-ind)>0){
+        if ((24-i)*(24-ind)>0){ // check if the 3 stones are on the same side 
           if (symbolArray[i]==color)
             xC++;
         }
@@ -350,7 +307,7 @@ bool checkMill(int ind, int color){ //check if same line (or col) as ind, has tw
     }
     if (ind/7==i/7) { // check rows
       if (i/7==3){
-        if ((24-i)*(24-ind)>0){
+        if ((24-i)*(24-ind)>0){ // check if the 3 stones are on the same side 
           if (symbolArray[i]==color)
             xR++;
         }
@@ -361,10 +318,7 @@ bool checkMill(int ind, int color){ //check if same line (or col) as ind, has tw
       }
     }
   }
-  if ((xR==3)||(xC==3)){
-    return true;
-  }
-  return false;
+  return ((xR==3)||(xC==3));
 }
 bool checkLegalMove(int i1, int i2, bool canJump){
   if (symbolArray[i2]!=EMPTY){
@@ -512,8 +466,8 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
       else {
         symbolArray[i]=4;
       }
-      symbolArray[24]=4;
     }
+    symbolArray[24]=4;
   }
   else if (GO==game){
     p1.x=50;
@@ -1189,76 +1143,12 @@ void loop() { // -------------------------  Init loop --------------------------
 /*    if (temp>48)
       temp=0;  // whqt was the use again? */
   }
+  #ifdef go_h
   else if (GO==game){  // -----------------++--+--++-+-------+-----+-+----++ GO ++--+-++--++--++--+---++-++
     arduboy.clear();
-    /*if (arduboy.justPressed(UP_BUTTON)){
-      if (p1.y>8){
-        p1.y-=8;
-      }
-    }
-    if (arduboy.justPressed(DOWN_BUTTON)){
-      if (p1.y<56){ 
-        p1.y+=8;
-      }
-    }
-    if (arduboy.justPressed(RIGHT_BUTTON)){
-      if (p1.x<98){
-        p1.x+=8;
-      }
-    }
-    if (arduboy.justPressed(LEFT_BUTTON)){
-      if (p1.x>50){
-        p1.x-=8;
-      }
-    }*/
-    SelectorManagment();
-    if (arduboy.justPressed(B_BUTTON)){
-      int temp=getIndice(p1.x,p1.y);
-      switch (symbolArray[temp]){        
-        case WHITE_STONE :
-          symbolArray[temp]= 0;
-          p2.score--;
-        break;
-        case BLACK_STONE :
-          symbolArray[temp]= WHITE_STONE;
-          p1.score--;
-          p2.score++;
-        break; 
-        default :
-          symbolArray[temp]= WHITE_STONE;          
-          p2.score++;
-        break;       
-      }
-    }
-    if (arduboy.justPressed(A_BUTTON)){
-      int temp=getIndice(p1.x,p1.y);
-      switch (symbolArray[temp]){
-        case BLACK_STONE :
-          symbolArray[temp]= 0;
-          p1.score--;
-        break;
-        case WHITE_STONE :
-          symbolArray[temp]= BLACK_STONE;
-          p2.score--;
-          p1.score++;
-        break;
-        default :
-          symbolArray[temp]= BLACK_STONE;          
-          p1.score++;
-        break;
-      }
-    }
-    drawGo();
-    turnUpdate();
-    drawStones();
- 
-    if (blinkTimer++>10){
-      blinkTimer=0;
-      blink=!blink;
-    }
-    drawSelector(getIndice(p1.x,p1.y));
-    
+    playGo();
   }
+  #endif
   #ifdef chess_h
     else if (CHESS==game){  // ######################################################### Chess ###############################
       arduboy.clear();

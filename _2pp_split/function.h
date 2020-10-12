@@ -11,6 +11,37 @@ int getIndice(int x, int y){ //TO DO
   return temp;
 }
 
+
+int drawStone(int i, bool color){ //black 0 white 1
+  int x=(i%casesCol)*casesLength+leftBorder;
+  int y=(i/casesCol)*casesHeight+upBorder;
+  arduboy.fillCircle(x,y,3,0);
+  if (color){
+    arduboy.fillCircle(x,y,2,1);
+  }
+}
+void drawStones(void){
+  for (int i=0; i<49; i++){
+    if (i==selectedI){
+      if (blink) {
+        if (BLACK_STONE==symbolArray[i]){
+          drawStone(i,0);
+        }
+        else if (WHITE_STONE==symbolArray[i]){
+          drawStone(i,1);
+        }
+      }
+    }
+    else {
+      if (BLACK_STONE==symbolArray[i]){
+      drawStone(i,0);
+      }
+      else if (WHITE_STONE==symbolArray[i]){
+        drawStone(i,1);
+      }
+    }
+  }
+}
 void SelectorManagment(void){
     if (arduboy.justPressed(UP_BUTTON)){
       if (p1.y>=upBorder+casesHeight){
