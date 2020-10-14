@@ -56,21 +56,16 @@
 #include "globals.h"
 #include "function.h"
 
-#include "chess.h"
-#include "go.h"
+//#include "pong.h"
+//#include "trace.h"
+//#include "reflx.h"
+#include "memo.h"
+//#include "mill.h"
+//#include "chess.h"
+//#include "go.h"
 
 //Arduboy2 arduboy;
  
-#define downWall 64
-#define upWall 0
-#define scoreTimerInit 60
-#define TRACE_WAIT_ROUND 2000
-//#define TRACE_FPS 10
-#define PRESSED_DOWN true
-#define PRESSED_UP false
-#define MEMO_WAIT 3000
-#define EMPTY 0
-
 
 #define NBGAMES 7
  
@@ -87,407 +82,56 @@ const unsigned char PROGMEM picture[] =
 };
 //char c=0;
 
-
-#if (THIS_IS_REAL_HARDWARE == 1) //don't think it works...
-#define TRACE_FPS 5
-#else
-#define TRACE_FPS 10
-#endif
-
-
-  //Controls designed for Arduboy
-bool forEmulator = false;  // ToDo : remove this and change Menu. No more need for this bool
-uint8_t P1_LEFT=UP_BUTTON;
-uint8_t  P1_RIGHT=DOWN_BUTTON;
-uint8_t  P2_RIGHT=B_BUTTON;
-uint8_t  P2_LEFT=A_BUTTON;
-
-class Balle {
-  public :
-    int x,y, vx,vy;
-    void affiche (void);
-    void stop (void);
-    void init (void);
-    Balle (void);
-    Balle (int X, int Y, int vx, int vy);
-};
-Balle::Balle(int X, int Y, int vx, int vy)
-{
-  this->x=X;
-  this->y=Y;
-  this->vx=vx;
-  this->vy=vy;  
-}
-Balle::Balle(void)  //not working
-{
-  this->init(); 
-}
-void Balle::init(void){  //to do: add random
-  this->x=64;
-  this->y=30;
-  //srand(p1.y);
-  int temp=-2+rand()%5;
-  if (0==temp){ 
-    if (rand()%2>=1){
-      temp++;
-    }
-    else {
-      temp--;
-    }
-  }
-  this->vx=temp;
-  temp=-2
-  +rand() %5;
-  this->vy=temp;
-}
-void Balle::affiche (void)
-{
-  arduboy.fillCircle(this->x,this->y,2);
-}
-void Balle::stop(void){
-  this->vx=0;
-  this->vy=0;
-}
-
-//class Balle balle();
-class Balle balle(12,20,1,-2);
-//balle.init(); // Y U no work ???!!
-                      
-void newTraceGame(void){
-  arduboy.clear();
-  arduboy.setCursor(40,30);
-  arduboy.print(p1.score);
-  arduboy.print(F(" : "));
-  arduboy.print(p2.score);
-  arduboy.display();
-  delay(TRACE_WAIT_ROUND);
-  arduboy.clear();
-  p1.x=10;
-  p1.y=30;
-  p1.dir=1;
-  p2.x=118;
-  p2.y=30;
-  p2.dir=3;
-  arduboy.drawRect(0,0,128,64,1);
-}
-void newReflXGame(void){
-  arduboy.clear();
-  arduboy.setCursor(0,0);
-  arduboy.print(F("Next Round :"));
-  arduboy.drawChar(1,11,24,1,0,1);
-  arduboy.drawChar(8,11,25,1,0,1);
-  arduboy.setCursor(16,11);
-  if (random(100)>=50){
-    arduboy.print(F(" are normal"));
-    arrowInverted=false;
-  }
-  else{
-    arduboy.print(F(" are inverted"));
-    arrowInverted=true;
-  }
-  arduboy.fillRect(0,21,15,8,1);
-  arduboy.drawChar(1,21,24,0,1,1);
-  arduboy.drawChar(8,21,25,0,1,1);
-  arduboy.setCursor(16,20);
-  if (random(100)>=50){
-    arduboy.print(F(" are normal"));
-    boldArrowInverted=false;
-  }
-  else{
-    arduboy.print(F(" are inverted"));
-    boldArrowInverted=true;
-  }
-  arduboy.setCursor(0,45);
-  arduboy.print(F("Press both 'down'"));
-  arduboy.setCursor(0,55);
-  arduboy.print(F("buttons when ready"));
-  arduboy.display();
-  while (!(arduboy.pressed(P1_RIGHT)&&arduboy.pressed(P2_LEFT))){
-    delay(10);
-  }
-  arduboy.clear();
-  timer=10+random(600);
-}
-
-void drawCurs(int x, int y, bool print){
-  uint8_t temp=0;
-  if (difficulty>1){
-    temp=1;
-  }
-  arduboy.drawRect(p1.x,p1.y,casesLength+temp,casesHeight+temp,print? 1:0);
-}
-
-void drawCard(int i, uint8_t face){ //2: symbol, 1: back, other: empty
-  uint8_t temp=1;
-    if (1==difficulty){
-    temp=2;
-  }
-  
-  if (1==face){
-    arduboy.drawRect(leftBorder+1+i%casesCol*casesLength,i/casesCol*casesHeight+upBorder+1,casesLength-temp,casesHeight-temp,0);
-    arduboy.drawChar(leftBorder+2+(i%casesCol)*casesLength,i/casesCol*casesHeight+2+upBorder,symbolArray[i],1,0,temp); 
-  }
-  else if (2==face){
-    arduboy.drawChar(leftBorder+2+(i%casesCol)*casesLength,i/casesCol*casesHeight+upBorder+2,(char)178,1,0,temp); 
-    arduboy.drawRect(leftBorder+1+i%casesCol*casesLength,i/casesCol*casesHeight+upBorder+1,casesLength-temp,casesHeight-temp,1);
-  }
-  else {
-    arduboy.fillRect(leftBorder+2+i%casesCol*casesLength,i/casesCol*casesHeight+upBorder+2,casesLength-temp,casesHeight-temp,0);
-  }  
-}
-
-void shuffle (int size){
-  char c=0;
-  int r1,r2=0;
-  for (int i=0; i<200; i++){
-    r1=random(size);
-    r2=random(size);
-    c=symbolArray[r1];
-    symbolArray[r1]=symbolArray[r2];
-    symbolArray[r2]=c;
-  }
-}
-
-bool checkPressed(bool down){
-  if (selected){ //bold arrow
-    if (!boldArrowInverted){
-      if (down==pointDown){
-        return true;
-      }
-      else return false;
-    }
-    else { //bold arrow is inverted
-      if (down!=pointDown){
-        return true;
-      }
-      else return false;
-    }
-  }
-  else { //normal arrow
-    if (!arrowInverted){
-      if (down==pointDown){
-        return true;
-      }
-      else return false;
-    }
-    else { //bold arrow is inverted
-      if (down!=pointDown){
-        return true;
-      }
-      else return false;
-    }
-  }
-}
-
-void drawMill(void){
-  arduboy.fillRect(50,0,65,65,1);
-  arduboy.drawRect(58,8,49,49,0);
-  arduboy.drawRect(66,16,33,33,0);
-  arduboy.drawRect(74,24,17,17,0);
-  arduboy.drawLine(82,8,82,56,0);
-  arduboy.drawLine(58,32,105,32,0);
-  arduboy.fillRect(75,25,15,15,1);  
-}
-
-bool checkMill(int ind, int color){ //check if same line (or col) as ind, has two other same colored stones
-  uint8_t xR,xC=0;
-  //int temp=0;
-  for (int i=0; i<49; i++){ // check col.
-    if (ind%7==i%7){
-      if (i%7==3) {
-        if ((24-i)*(24-ind)>0){ // check if the 3 stones are on the same side 
-          if (stoneArray[i]==color)
-            xC++;
-        }
-      }
-      else {
-        if (stoneArray[i]==color)
-          xC++;
-      }
-    }
-    if (ind/7==i/7) { // check rows
-      if (i/7==3){
-        if ((24-i)*(24-ind)>0){ // check if the 3 stones are on the same side 
-          if (stoneArray[i]==color)
-            xR++;
-        }
-      }   
-      else {
-        if (stoneArray[i]==color)
-          xR++;
-      }
-    }
-  }
-  return ((xR==3)||(xC==3));
-}
-bool checkLegalMove(int i1, int i2, bool canJump){
-  if (stoneArray[i2]!=EMPTY){
-    return false;
-  }
-  if (canJump){
-    return true; 
-  }
-  int temp=i1/7;
-  if (i2/7==temp){ //same row
-    if ((temp==0)||(temp==6)){
-      if (abs(i1-i2)==3){
-        return true;
-      }
-    }
-    else if ((temp==1)||(temp==5)){
-      if (abs(i1-i2)==2){
-        return true;
-      }
-    }
-    else if ((temp==2)||(temp==4)){
-      if ((i2%7>1)&&(i2%7<5)&&(abs(i1-i2)==1)){
-        return true;
-      }
-    }
-    else if (temp==3){ // temp==3 stoneArray[22]=4
-      if (abs(i1-i2)==1){
-        return true;
-      }
-    }
-  }
-  temp=i1%7;
-  if (i2%7==temp){ // same col.
-    if ((temp==0)||(temp==6)){
-      if (abs(i1/7-i2/7)==3){
-        return true;
-      }
-    }
-    else if ((temp==1)||(temp==5)){
-      if (abs(i1/7-i2/7)==2){
-        return true;
-      }
-    }
-    else if ((temp==2)||(temp==4)){
-      if ((i2/7>1)&&(i2/7<5)&&(abs(i1/7-i2/7)==1)){
-        return true;
-      }
-    }
-    else if (temp==3){ // temp==3 stoneArray[22]=4
-      if (abs(i1/7-i2/7)==1){
-        return true;
-      }
-    }
-  }
-  return false;
-}
-bool checkLose(int color){
-  int temp=0;
-  for (int i=0;i<49;i++){
-    if (stoneArray[i]==color){
-      temp++;
-      for (int j=0;j<49;j++){
-        if (checkLegalMove(i,j,false)) { 
-          return false;
-        }
-      }
-    }
-  }
-  if (temp==3){ //because you can't get stuck if you can jump
-    return false;
-  }
-  return true;
-}
-bool checkRemoving (int color) { // check if one or more stone(s) is removable (not in a mill)
-  for (int i=0;i<49;i++){
-    if (stoneArray[i]==color){
-      if (!checkMill(i,color)){
-        return true;
-      }
-    }
-  }
-  return false;
-}
- 
 void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
   arduboy.clear();
   if (0==game){
     arduboy.begin();
     arduboy.setFrameRate(60);
   }
-  else if (PONG==game){
-    arduboy.setFrameRate(30+difficulty*5);
-    p1.x=4;
-    p1.y=20;
-    p2.x=122;
-    p2.y=20;
-  }
-  else if (TRACE==game){
-    arduboy.setFrameRate(TRACE_FPS+difficulty*5);
-    newTraceGame();
-  }
-  else if (REFLX==game){
-    newReflXGame();
-  }
+
+  #ifdef pong_h
+    else if (PONG==game){
+      arduboy.setFrameRate(30+difficulty*5);
+      p1.x=4;
+      p1.y=20;
+      p2.x=122;
+      p2.y=20;
+    }
+  #endif
+  
+  #ifdef trace_h
+    else if (TRACE==game){
+      arduboy.setFrameRate(TRACE_FPS+difficulty*5);
+      newTraceGame();
+    }
+  #endif
+  
+  #ifdef reflx_h
+    else if (REFLX==game){
+      newReflXGame();
+    }
+  #endif
+  
   else if (MEMO==game){
-    arduboy.clear();
-    casesCol=7+difficulty;
-    casesRow=2+difficulty;
-    
-    if (1==difficulty){
-      leftBorder-=12;
-      upBorder=1;
-      casesHeight=20;
-      casesLength=14;
-    }
-    p1.x=leftBorder;
-    p1.y=upBorder;    
-    int temp=casesCol*casesRow;
-    for (int i=temp; i<66; i++){
-      stoneArray[i]=0;
-    }
-    shuffle(temp);
-    for (int i=0; i<temp; i++){
-      drawCard(i,2);
-    }
-    turnUpdate();
+    memoSetup();
   }
-  else if (MILL==game){
-    p1.score=p1.length=9; //Score is the nb of stone to put down. length is the total number of stones per player
-    p2.score=p2.length=9;
-    p1.x=58;
-    p1.y=8;
-    casesCol=7;
-    casesRow=7;
-    casesHeight=8;
-    leftBorder=58;
-    upBorder=8;
-    for (int i=0; i<49; i++){ //block the invalid places for Mill
-      if ((((0==i%7)||(6==i%7))&&((i/7==0)||(i/7==6)))||
-         (((1==i%7)||(5==i%7))&&((i/7==1)||(i/7==5)))||
-         (((2==i%7)||(4==i%7))&&((i/7==2)||(i/7==4)))||
-         (i/7==3)||(i%7==3)  )    {
-        stoneArray[i]=EMPTY;
-      }
-      else {
-        stoneArray[i]=4;
-      }
+  #ifdef mill_h
+    else if (MILL==game){
+      millSetup();
     }
-    stoneArray[24]=4;
-  }
-  else if (GO==game){
-    p1.x=50;
-    p1.y=8;
-    casesCol=9;
-    casesRow=9;
-    casesHeight=8;
-    leftBorder=42;
-    upBorder=0;
-  }
-  else if (CHESS==game){
-    p1.x=74;
-    p1.y=12;
-    casesCol=12;
-    casesRow=8;
-    casesHeight=8;
-    casesLength=8;
-    leftBorder=22;
-    upBorder=4;
-  }
+  #endif
+
+  #ifdef go_h
+    else if (GO==game){
+      goSetup();
+    }
+  #endif
+
+  #ifdef chess_h
+    else if (CHESS==game){
+      chessSetup();
+    }
+  #endif
 }
  
 void loop() { // -------------------------  Init loop -------------------------------------------------------------------------
@@ -624,524 +268,33 @@ void loop() { // -------------------------  Init loop --------------------------
   } 
   else if (PONG==game){     //  ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    Pong   |||||||||||||||||||||||||||||||||||||||||
     
-    arduboy.drawRect(0,0,128,64,1);
-    arduboy.fillRect(p1.x,p1.y,2,p1.length,1);
-    arduboy.fillRect(p2.x,p2.y,2,p2.length,1);
-    
-   if (arduboy.pressed(P1_LEFT))
-    {
-      if (p1.y>upWall+1){
-        p1.y--;
-      }
-    }
-   if (arduboy.pressed(P1_RIGHT))
-    {
-      if (p1.y+p1.length<downWall-1){
-        p1.y++;
-      }
-    }
-    
-   if (arduboy.pressed(P2_RIGHT))
-    {
-      if (p2.y>upWall+1){
-        p2.y--;
-      }
-    }
-   if (arduboy.pressed(P2_LEFT))
-    {
-      if (p2.y+p2.length<downWall-1){
-        p2.y++;
-      }
-    }
-    
-    if (scoreTimer>0){ // *********** someone scored ****
-      if (0<=scoreTimer--){
-        balle.init();
-      }
-      arduboy.setCursor(50,45);
-      arduboy.print(p1.score);
-      arduboy.print(" - ");
-      arduboy.print(p2.score);
-    }
-    // *************  calculate Ball position
-    else {
-      balle.x+=balle.vx;
-      balle.y+=balle.vy;
-      
-      if (balle.y<upWall){ // upper wall
-        balle.y*=-1;
-        balle.vy*=-1;
-      }
-      if (balle.y>downWall){ // down wall
-        balle.y=balle.y-2*(balle.y-downWall);
-        balle.vy*=-1;
-      }
-      
-      if (0>=balle.x)
-      {
-        balle.stop();
-        p2.score++;
-        scoreTimer=scoreTimerInit;
-      }
-      if (128<=balle.x)
-      {
-        balle.stop();
-        p1.score++;
-        scoreTimer=scoreTimerInit;
-      }      
-      if (balle.x<p1.x+2){
-        if ((balle.y>p1.y)&&(balle.y<p1.y+p1.length)){ //  left player
-          balle.x=balle.x+2*(p1.x+2-balle.x);
-          balle.vx*=-1;
-        }
-        else if (balle.y==p1.y) {
-          balle.vy=balle.vy==0 ? -1 : abs(balle.vy)*(-1);
-          balle.vx*=-1;
-        }
-        else if (balle.y==p1.y+p1.length) {
-          balle.vy=balle.vy==0 ? 1 : abs(balle.vy);
-          balle.vx*=-1;
-        }
-      }
-      if (balle.x>p2.x){
-        if ((balle.y>p2.y)&&(balle.y<p2.y+p2.length)){ //  right player
-          balle.x=balle.x+2*(p2.x+2-balle.x);
-          balle.vx*=-1;
-        }
-        else if (balle.y==p2.y) {
-          balle.vy=balle.vy==0 ? -1 : abs(balle.vy)*(-1);
-          balle.vx*=-1;
-        }
-        else if (balle.y==p2.y+p2.length) {
-          balle.vy=balle.vy==0 ? 1 : abs(balle.vy);
-          balle.vx*=-1;
-        }
-      }
-    }
-    balle.affiche();
   }
   
-  else if (game==TRACE) // ---------------------------------------------------------------- Trace  -----------------------------
-  {
-    if (arduboy.justPressed(P1_LEFT)){
-      if (0==p1.dir){
-        p1.dir=3;
-      }
-      else {
-        p1.dir--;
-      }
+  #ifdef trace_h
+    else if (game==TRACE) // ---------------------------------------------------------------- Trace  -----------------------------
+    {
+      playTrace();
     }
-    if (arduboy.justPressed(P1_RIGHT)){
-      p1.dir++;
-      if (p1.dir>3){
-        p1.dir=0;
-      }
+  #endif
+
+  #ifdef reflx_h
+    else if (REFLX==game){ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ReflX xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      playReflx();
     }
-    if (arduboy.justPressed(P2_LEFT)){
-      if (0==p2.dir){
-        p2.dir=3;
-      }
-      else {
-        p2.dir--;
-      }
-    }
-    if (arduboy.justPressed(P2_RIGHT)){
-      p2.dir++;
-      if (p2.dir>3){
-        p2.dir=0;
-      }
-    }    
-      switch(p1.dir){   //player 1 moves
-        case 0:
-          p1.y--;
-        break;
-        case 1:
-          p1.x++;
-        break;
-        case 2:
-          p1.y++;
-        break;
-        case 3:
-          p1.x--;
-        break;
-      }
-      switch(p2.dir){   //player 2 moves
-        case 0:
-          p2.y--;
-        break;
-        case 1:
-          p2.x++;
-        break;
-        case 2:
-          p2.y++;
-        break;
-        case 3:
-          p2.x--;
-        break;
-      }
-      
-      if((p1.x==p2.x)&&(p1.y==p2.y)){ //draw
-        p1.score++;
-        p2.score++;
-        newTraceGame();
-      }
-      
-      if(arduboy.getPixel(p1.x,p1.y)){
-        //arduboy.print("BLAM!");  //for now...
-        p2.score++;
-        newTraceGame();
-      }
-      if(arduboy.getPixel(p2.x,p2.y)){
-        //arduboy.print("BIM!");  //for now...
-        p1.score++;
-        newTraceGame();
-      }
-      arduboy.drawPixel(p1.x,p1.y,1);
-      arduboy.drawPixel(p2.x,p2.y,1);
-  }
-  else if (REFLX==game){ // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ReflX xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  uint8_t scoreChange=0; // ( 0 no change, 1 correct, 2 false ) for p1 <<2 for p2
-    if (!((arduboy.pressed(DOWN_BUTTON))||(arduboy.pressed(UP_BUTTON))||(arduboy.pressed(A_BUTTON))||(arduboy.pressed(B_BUTTON)))){
-      timer--;
-    }
-    if (0==timer){
-      if (random(100)>50){
-        selected=false; // normal arrow
-        if (random(100)>50){
-          pointDown=false;
-          arduboy.drawChar(55,22,24,1,0,3);
-        }
-        else {
-          pointDown=true;
-          arduboy.drawChar(55,22,25,1,0,3);
-        }
-      }
-      else {
-        selected=true;
-        if (random(100)>50){
-          pointDown=false;
-          arduboy.drawChar(52,22,0,0,1,3);  
-          arduboy.drawChar(55,22,24,0,1,3);
-        }
-        else {
-          pointDown=true;
-          arduboy.drawChar(52,22,0,0,1,3);
-          arduboy.drawChar(55,22,25,0,1,3);
-        }
-      }
-    }
-    if ((timer<0)&&(0==scoreChange)){
-      if ((arduboy.justPressed(DOWN_BUTTON)||arduboy.justPressed(UP_BUTTON))||(arduboy.justPressed(B_BUTTON)||arduboy.justPressed(A_BUTTON))) { 
-        if (arduboy.justPressed(P1_RIGHT)||arduboy.justPressed(P1_LEFT)) { //only p1 has pressed
-           if (arduboy.justPressed(P1_RIGHT)){
-             if (checkPressed(PRESSED_DOWN)){
-               scoreChange+=1;
-             }
-             else {
-               scoreChange+=2;
-             }
-           }
-           else if (arduboy.justPressed(P1_LEFT)){
-             if (checkPressed(PRESSED_UP)){
-               scoreChange+=1;
-             }
-             else {
-               scoreChange+=2;
-             }
-           }
-        }
-        if (arduboy.justPressed(P2_RIGHT)||arduboy.justPressed(P2_LEFT)) { //only p1 has pressed
-          if (arduboy.justPressed(P2_LEFT)){
-            if (checkPressed(PRESSED_DOWN)){
-            scoreChange+=4;
-            }
-            else {
-            scoreChange+=8;
-            }
-          }
-          else if (arduboy.justPressed(P2_RIGHT)) {
-            if (checkPressed(PRESSED_UP)){
-             scoreChange+=4;
-            }
-            else {
-             scoreChange+=8;
-            }
-          }
-        }
-      }
-      if (scoreChange!=0){
-        if ((scoreChange&2)==2){
-          p1.score--;
-          arduboy.drawChar(2,45,'x',1,0,1);
-        }
-        if ((scoreChange&1)==1){
-          p1.score++;
-          //arduboy.drawChar(2,45,'v',1,0,1);
-          arduboy.drawLine(3,47,5,49,1);
-          arduboy.drawLine(5,49,9,40,1);
-        }
-        if ((scoreChange&4)==4){
-          p2.score++;
-          //arduboy.drawChar(115,45,'v',1,0,1);
-          arduboy.drawLine(117,47,119,49,1);
-          arduboy.drawLine(119,49,123,40,1);
-        }
-        if ((scoreChange&8)==8){
-          p2.score--;
-          arduboy.drawChar(115,45,'x',1,0,1);
-        }
-        arduboy.setCursor(49,10);
-        arduboy.print(p1.score);
-        arduboy.print(" : ");
-        arduboy.print(p2.score);
-        //arduboy.print(scoreChange);
-          
-        arduboy.display();
-        delay(3000);
-        newReflXGame();
-      }
-    }
-  }
+  #endif
   
+  #ifdef memo_h
   else if (MEMO==game){  // ############################################  MEMO #################################
-    if (arduboy.justPressed(UP_BUTTON)){
-      if (p1.y>upBorder){
-        drawCurs(p1.x,p1.y,false);
-        p1.y-=casesHeight;
-      }
-    }
-    if (arduboy.justPressed(DOWN_BUTTON)){
-      if (p1.y<50){ //?
-        drawCurs(p1.x,p1.y,false);
-        p1.y+=casesHeight;
-      }
-    }
-    if (arduboy.justPressed(RIGHT_BUTTON)){
-      if (p1.x<105){
-        drawCurs(p1.x,p1.y,false);
-        p1.x+=casesLength;
-      }
-    }
-    if (arduboy.justPressed(LEFT_BUTTON)){
-      if (p1.x>leftBorder){
-        drawCurs(p1.x,p1.y,false);
-        p1.x-=casesLength;
-      }      
-    }
-    if (arduboy.justPressed(A_BUTTON)){
-      int temp=0;
-      if (!selected){
-        
-        if(selectedI!=getIndice(p1.x,p1.y)){
-          selectedI=getIndice(p1.x,p1.y);
-          if (stoneArray[selectedI]!=0){
-            drawCard(selectedI,1);
-            selected=true;
-          }
-        }
-      }
-      else { //if (selected){
-        temp=getIndice(p1.x,p1.y);
-        if ((temp!=selectedI)&&(stoneArray[temp]!=0)){
-          drawCard(temp,1);
-          arduboy.display();
-          delay(MEMO_WAIT);
-          if (stoneArray[temp]==stoneArray[selectedI]){ // win a point
-            stoneArray[temp]=stoneArray[selectedI]=0;
-           drawCard(temp,0);
-            drawCard(selectedI,0);
-            arduboy.display();
-            selected=false;
-            if (p1Playing){
-              p1.score++;
-            }
-            else {
-              p2.score++;
-            }
-            if (p1.score+p2.score==casesCol*casesRow/2){
-              arduboy.clear();
-              arduboy.setCursor(24,30);
-              if (p1.score==p2.score){
-                arduboy.print(F("   Draw !"));
-              }
-              else {
-                arduboy.print(F("Player "));
-                arduboy.print(p1.score>p2.score ? "1":"2");
-                arduboy.print(F(" wins"));
-              }
-              arduboy.display();
-              while("why write a stoneArrayInit when you can infite loop and reset"); 
-            }
-          }
-          else {  //2nd card is different
-            drawCard(temp,2);
-            drawCard(selectedI,2);
-            p1Playing=!p1Playing;
-            //nselectedI=0;
-            selected=false;            
-          }
-        }
-        turnUpdate();
-      }
-    }
-    drawCurs(p1.x,p1.y,blink ? true:false);
-    //arduboy.drawRect(p1.x,p1.y,casesLength+1,casesHeight+1,blink ? 1:0);
-    if (blinkTimer++>10) { // Blink speed ?
-      blink=!blink;
-      blinkTimer=0;
-    }
+    playMemo();
   }
+  #endif
   
+  #ifdef mill_h
   else if (MILL==game){  // -----------------++--+--++-+-------+-----+-+----++ MILL ++--+-++--++--++--+---++-++
-    /*if (arduboy.justPressed(UP_BUTTON)){
-      if (p1.y>8){
-        p1.y-=8;
-      }
-    }
-    if (arduboy.justPressed(DOWN_BUTTON)){
-      if (p1.y<56){ 
-        p1.y+=8;
-      }
-    }
-    if (arduboy.justPressed(RIGHT_BUTTON)){
-      if (p1.x<98){
-        p1.x+=8;
-      }
-    }
-    if (arduboy.justPressed(LEFT_BUTTON)){
-      if (p1.x>50){
-        p1.x-=8;
-      }
-    }*/
-    SelectorManagment();
-    if (arduboy.justPressed(B_BUTTON)){
-      selected=false;
-      selectedI=-1;
-    }
-    if (arduboy.justPressed(A_BUTTON)){
-      int temp=getIndice(p1.x,p1.y);
-      if (removing){
-        if ((!checkMill(temp,p1Playing? WHITE_STONE : BLACK_STONE))&&(stoneArray[temp]==(p1Playing? WHITE_STONE : BLACK_STONE))){
-          removing=false;
-          stoneArray[temp]=EMPTY;
-          if (p1Playing){
-            p2.length--;
-            if (p2.length<3){
-              arduboy.setCursor(20,30);
-              arduboy.print(F("P1 Wins"));
-              arduboy.display();
-              while("Never gonna give you up");
-            }
-          }
-          else {
-            p1.length--;
-            if (p1.length<3){
-              arduboy.setCursor(20,30);
-              arduboy.print(F("P2 Wins"));
-              arduboy.display();
-              while("Never gonna let you down");
-            }
-          }      
-          p1Playing=!p1Playing;
-        }
-      }
-      else if (p1.score+p2.score>0){
-        if (checkLegalMove(0,temp,true)){
-          if (p1Playing){
-            stoneArray[temp]= BLACK_STONE ;
-            p1.score--;
-            if (checkMill(temp,BLACK_STONE)){
-              if (checkRemoving(WHITE_STONE)){
-                removing=true;
-              }
-              else{
-                arduboy.print("Can't remove Stone");
-                arduboy.display();
-                delay(2000);
-                p1Playing=false;
-              }
-            }
-            else {
-              p1Playing=false;
-            }
-          }
-          else {
-            stoneArray[temp]= WHITE_STONE ;
-            p2.score--;
-            if (checkMill(temp,WHITE_STONE)){
-              if (checkRemoving(BLACK_STONE)){
-                removing=true;
-              }
-              else{
-                arduboy.print("Can't remove Stone");
-                arduboy.display();
-                delay(2000);
-                p1Playing=false;
-              }
-            }
-            else {
-              p1Playing=true;
-            }
-          }
-        }
-      }
-      else  {
-        if (!selected){
-          if (((p1Playing)&&stoneArray[temp]==BLACK_STONE)||((!p1Playing)&&stoneArray[temp]==WHITE_STONE)){
-            selectedI=temp;
-            selected=true;
-          }
-        }
-        else {
-          if (checkLegalMove(selectedI,temp,p1Playing? p1.length==3:p2.length==3)){
-            stoneArray[temp]=stoneArray[selectedI];
-            stoneArray[selectedI]=EMPTY;
-            selectedI=-1;
-            selected=false;
-            if (checkMill(temp,p1Playing? BLACK_STONE : WHITE_STONE )){
-              if (checkRemoving(p1Playing? WHITE_STONE : BLACK_STONE)){
-                removing=true;
-              }
-              else{
-                arduboy.print("no stone available");
-                arduboy.display();
-                delay(2000);
-                p1Playing=!p1Playing;
-              }
-            }
-            if (checkLose(p1Playing? WHITE_STONE : BLACK_STONE)){
-              drawMill();
-              drawStones();
-              arduboy.print("Player");
-              arduboy.println(p1Playing? 2:1);
-              arduboy.println("can't move");
-              arduboy.println("");
-              arduboy.print("Player");
-              arduboy.println(p1Playing? 1:2);
-              arduboy.println("won !");
-              arduboy.display();
-              while(true); //inite loop: see infinite loop
-            }
-            if (!removing) {
-              p1Playing=!p1Playing;
-            }
-          }
-        }
-      }
-    }
-    drawMill();
-    turnUpdate();
-    drawStones();
- 
-    if (blinkTimer++>10){
-      blinkTimer=0;
-      blink=!blink;
-    }
-    drawSelector(getIndice(p1.x,p1.y));
-    
-/*    if (temp>48)
-      temp=0;  // whqt was the use again? */
+    playMill();
   }
+  #endif
+  
   #ifdef go_h
   else if (GO==game){  // -----------------++--+--++-+-------+-----+-+----++ GO ++--+-++--++--++--+---++-++
     arduboy.clear();

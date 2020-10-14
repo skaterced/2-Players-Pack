@@ -111,6 +111,17 @@ void drawChessBoard(void){
   }
 }
 
+void chessSetup(){
+    p1.x=74;
+    p1.y=12;
+    casesCol=12;
+    casesRow=8;
+    casesHeight=8;
+    casesLength=8;
+    leftBorder=22;
+    upBorder=4;  
+}
+
 void playChess(){
   /*
   if (arduboy.justPressed(UP_BUTTON)){

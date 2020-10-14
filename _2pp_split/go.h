@@ -14,6 +14,16 @@ void drawGo(void){
   }
 }
 
+void goSetup(){
+   p1.x=50;
+    p1.y=8;
+    casesCol=9;
+    casesRow=9;
+    casesHeight=8;
+    leftBorder=42;
+    upBorder=0;  
+}
+
 void playGo(){
 /*if (arduboy.justPressed(UP_BUTTON)){
       if (p1.y>8){
