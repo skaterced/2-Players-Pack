@@ -1,14 +1,6 @@
 
 /*  Welcome to my first Arduboy Game.
 
-        Sorry for not splitting the code in parts but it was written mainly on 
-        https://felipemanga.github.io/ProjectABE/?url=new
-        and I couldnt find out how to include a .h file
-        
-    Don't hesitate to write me if you have a question or a feedback:
-    Cédric Martin  
-    skaterced@hotmail.com
-    
     About the Games :
     
       Menu:
@@ -48,24 +40,19 @@
 
 
     Special thanks to my brother Jean-Philippe who taught me how to code and wrote the "original" Trace inspired by the movie TRON
+   
 */
-
-//#include <Arduboy2.h>
-//#include <stdlib.h>
-
-#include "globals.h"
-#include "function.h"
 
 //#include "pong.h"
 //#include "trace.h"
 //#include "reflx.h"
 #include "memo.h"
 //#include "mill.h"
-//#include "chess.h"
+#include "chess.h"
 //#include "go.h"
 
-//Arduboy2 arduboy;
- 
+#include "globals.h"
+#include "function.h" 
 
 #define NBGAMES 7
  
@@ -111,10 +98,13 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
       newReflXGame();
     }
   #endif
+
+  #ifdef memo_h
+    else if (MEMO==game){
+      memoSetup();
+    }
+  #endif
   
-  else if (MEMO==game){
-    memoSetup();
-  }
   #ifdef mill_h
     else if (MILL==game){
       millSetup();
@@ -265,11 +255,13 @@ void loop() { // -------------------------  Init loop --------------------------
       game=MENU;
       arduboy.clear();
     }     
-  } 
-  else if (PONG==game){     //  ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    Pong   |||||||||||||||||||||||||||||||||||||||||
-    
   }
-  
+
+  #ifdef trace_h  
+    else if (PONG==game){     //  ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||    Pong   |||||||||||||||||||||||||||||||||||||||||
+      playPong();
+    }
+  #endif
   #ifdef trace_h
     else if (game==TRACE) // ---------------------------------------------------------------- Trace  -----------------------------
     {
@@ -296,10 +288,10 @@ void loop() { // -------------------------  Init loop --------------------------
   #endif
   
   #ifdef go_h
-  else if (GO==game){  // -----------------++--+--++-+-------+-----+-+----++ GO ++--+-++--++--++--+---++-++
-    arduboy.clear();
-    playGo();
-  }
+    else if (GO==game){  // -----------------++--+--++-+-------+-----+-+----++ GO ++--+-++--++--++--+---++-++
+      arduboy.clear();
+      playGo();
+    }
   #endif
   #ifdef chess_h
     else if (CHESS==game){  // ######################################################### Chess ###############################
@@ -308,8 +300,10 @@ void loop() { // -------------------------  Init loop --------------------------
     }
   #endif
   else {
+    arduboy.setCursor(0,0);
     arduboy.println("please recompile with");
     arduboy.println("this game included");
+    arduboy.println("(#include xxx_h)");
   }
   arduboy.display();
 }

@@ -72,7 +72,7 @@ class ChessPiece {
       int y= i/casesCol*casesHeight+1;//+upBorder+2;
       int temp=0;
       bool caseIsBlack=true;
-      if ((i%casesCol>3)&&(0==(i%casesCol+i/casesCol)%2))
+      if ((i%casesCol>1)&&(i%casesCol<10)&&(0==(i%casesCol+i/casesCol)%2))
         caseIsBlack=false;
       if ((selectedI!=i)||(blink)){
         if (black){
@@ -91,22 +91,51 @@ class ChessPiece {
     }
 };
 
-class ChessPiece pieces[NBCHESSPIECES]={ChessPiece(19,CHESS_PION,false),ChessPiece(16,CHESS_PION,false),ChessPiece(17,CHESS_PION,false),ChessPiece(18,CHESS_PION,false),
-                                        ChessPiece(20,CHESS_PION,false),ChessPiece(21,CHESS_PION,false),ChessPiece(22,CHESS_PION,false),ChessPiece(23,CHESS_PION,false),                                        
-                                        ChessPiece(4,CHESS_TOUR,false),ChessPiece(5,CHESS_CHEVAL,false),ChessPiece(6,CHESS_FOU,false),ChessPiece(7,CHESS_ROI,false),
-                                        ChessPiece(11,CHESS_TOUR,false),ChessPiece(10,CHESS_CHEVAL,false),ChessPiece(9,CHESS_FOU,false),ChessPiece(8,CHESS_DAME,false),
-                                        ChessPiece(79,CHESS_PION,true),ChessPiece(76,CHESS_PION,true),ChessPiece(77,CHESS_PION,true),ChessPiece(78,CHESS_PION,true),
-                                        ChessPiece(80,CHESS_PION,true),ChessPiece(81,CHESS_PION,true),ChessPiece(82,CHESS_PION,true),ChessPiece(83,CHESS_PION,true),
-                                        ChessPiece(88,CHESS_TOUR,true),ChessPiece(89,CHESS_CHEVAL,true),ChessPiece(90,CHESS_FOU,true),ChessPiece(91,CHESS_ROI,true),
-                                        ChessPiece(95,CHESS_TOUR,true),ChessPiece(94,CHESS_CHEVAL,true),ChessPiece(93,CHESS_FOU,true),ChessPiece(92,CHESS_DAME,true)};
+class ChessPiece pieces[NBCHESSPIECES]={ChessPiece(17,CHESS_PION,false),ChessPiece(14,CHESS_PION,false),ChessPiece(15,CHESS_PION,false),ChessPiece(16,CHESS_PION,false),
+                                        ChessPiece(18,CHESS_PION,false),ChessPiece(19,CHESS_PION,false),ChessPiece(20,CHESS_PION,false),ChessPiece(21,CHESS_PION,false),                                        
+                                        ChessPiece(2,CHESS_TOUR,false),ChessPiece(3,CHESS_CHEVAL,false),ChessPiece(4,CHESS_FOU,false),ChessPiece(5,CHESS_ROI,false),
+                                        ChessPiece(9,CHESS_TOUR,false),ChessPiece(8,CHESS_CHEVAL,false),ChessPiece(7,CHESS_FOU,false),ChessPiece(6,CHESS_DAME,false),
+                                        ChessPiece(77,CHESS_PION,true),ChessPiece(74,CHESS_PION,true),ChessPiece(75,CHESS_PION,true),ChessPiece(76,CHESS_PION,true),
+                                        ChessPiece(78,CHESS_PION,true),ChessPiece(79,CHESS_PION,true),ChessPiece(80,CHESS_PION,true),ChessPiece(81,CHESS_PION,true),
+                                        ChessPiece(86,CHESS_TOUR,true),ChessPiece(87,CHESS_CHEVAL,true),ChessPiece(88,CHESS_FOU,true),ChessPiece(89,CHESS_ROI,true),
+                                        ChessPiece(93,CHESS_TOUR,true),ChessPiece(92,CHESS_CHEVAL,true),ChessPiece(91,CHESS_FOU,true),ChessPiece(90,CHESS_DAME,true)};
 
+int isOccupied(uint8_t ind){ //return the indice (in the pieces array) of the piece that stays on the given chessBoard indice
+  for (int i=0; i<NBCHESSPIECES; i++){
+    if (pieces[i].i==ind)
+      return i;
+  }
+  return -1;
+}
+
+void eat(uint8_t v){ // V for Victim indice in the pieces array
+  int temp=0;
+  if (pieces[v].black){ // bring out your deads... whites on the left, blacks on the right
+    temp=11;
+  }
+  for (int j=0; j<16; j++){
+    if (isOccupied(temp)!=-1){
+      temp+=casesCol;
+      if (108==temp){
+        temp=1;
+      }
+      else if (119==temp){
+        temp=10;
+      }
+    }
+    else {
+      pieces[v].i=temp;
+      break;
+    }
+  }
+}
 
 void drawChessBoard(void){
-  arduboy.drawRect(49,0,66,64,1);
+  arduboy.drawRect(33,0,66,64,1);
   for(int i=0; i<4; i++){
     for(int j=0; j<4; j++){
-      arduboy.fillRect(50+16*i,1+16*j,8,8,1);
-      arduboy.fillRect(58+16*i,9+16*j,8,8,1);
+      arduboy.fillRect(34+16*i,1+16*j,8,8,1);
+      arduboy.fillRect(42+16*i,9+16*j,8,8,1);
     }
   }
 }
@@ -150,26 +179,25 @@ void playChess(){
     selected=false;
   }
   if (arduboy.justPressed(A_BUTTON)){
-    int selI=getIndice(p1.x,p1.y);
+    int selectorI=getIndice(p1.x,p1.y);
     if (!selected){
       for (int i=0; i<NBCHESSPIECES; i++){
-        if (pieces[i].i==selI){
+        if (pieces[i].i==selectorI){
           selected=true;
-          selectedI=selI;
+          selectedI=selectorI;
           break;  
         }
       }
     }
-    else{
-      for (int i=0; i<NBCHESSPIECES; i++){
-        if (pieces[i].i==selectedI){        // Piece is put down
-          // todo check if someone's already here
-          pieces[i].i=selI;
-          selected=false;
-          selectedI=-1;
-          break;  
+    else{ // Piece is put down
+      if (selectorI!=selectedI){
+        int victim=isOccupied(selectorI);
+        if (victim!=-1){
+          eat(victim);
         }
-      //todo plein de truc
+        pieces[isOccupied(selectedI)].i=selectorI;
+        selected=false;
+        selectedI=-1;
       }
     }
   }
@@ -186,7 +214,7 @@ void playChess(){
     blink=!blink;
   }
   drawSelector(getIndice(p1.x,p1.y));
-  arduboy.drawLine(49,0,49,64,1);   
+  arduboy.drawLine(33,0,33,64,1);   
 }
 
 #endif
