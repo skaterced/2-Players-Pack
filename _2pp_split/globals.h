@@ -37,17 +37,14 @@ int8_t selectedI=-1;
 bool removing=false;
 bool blink=true;
 uint8_t blinkTimer=0;
-bool arrowInverted=false;
-bool boldArrowInverted=false;
-bool pointDown=false;
 uint8_t casesLength=8;
 uint8_t casesHeight=11;
 uint8_t casesCol=7+difficulty;
 uint8_t casesRow=2+difficulty;
-uint8_t leftBorder=30;
-uint8_t upBorder=-1;
+int leftBorder=30;
+int upBorder=-1;
 
-uint8_t stoneArray [96];
+uint8_t stoneArray [81];
 
 
 class Player {

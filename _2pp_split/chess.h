@@ -116,10 +116,10 @@ void eat(uint8_t v){ // V for Victim indice in the pieces array
   for (int j=0; j<16; j++){
     if (isOccupied(temp)!=-1){
       temp+=casesCol;
-      if (108==temp){
+      if (96==temp){
         temp=1;
       }
-      else if (119==temp){
+      else if (107==temp){
         temp=10;
       }
     }

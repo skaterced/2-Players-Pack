@@ -9,6 +9,10 @@
 #define PRESSED_DOWN true
 #define PRESSED_UP false
 
+bool arrowInverted=false;
+bool boldArrowInverted=false;
+bool pointDown=false;
+
 void newReflXGame(void){
   arduboy.clear();
   arduboy.setCursor(0,0);

@@ -40,16 +40,17 @@
 
 
     Special thanks to my brother Jean-Philippe who taught me how to code and wrote the "original" Trace inspired by the movie TRON
+    and thanks to Pharap who spends a lot of time helping coding people
    
 */
 
-//#include "pong.h"
-//#include "trace.h"
-//#include "reflx.h"
+#include "pong.h"
+#include "trace.h"
+#include "reflx.h"
 #include "memo.h"
-//#include "mill.h"
+#include "mill.h"
 #include "chess.h"
-//#include "go.h"
+#include "go.h"
 
 #include "globals.h"
 #include "function.h" 

@@ -15,13 +15,13 @@ void drawGo(void){
 }
 
 void goSetup(){
-   p1.x=50;
-    p1.y=8;
-    casesCol=9;
-    casesRow=9;
-    casesHeight=8;
-    leftBorder=42;
-    upBorder=0;  
+  p1.x=50;
+  p1.y=8;
+  casesCol=9;
+  casesRow=9;
+  casesHeight=8;
+  leftBorder=42;
+  upBorder=0;  
 }
 
 void playGo(){

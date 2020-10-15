@@ -21,7 +21,7 @@ int drawStone(int i, bool color){ //black 0 white 1
   }
 }
 void drawStones(void){
-  for (int i=0; i<49; i++){
+  for (int i=0; i<81; i++){
     if (i==selectedI){
       if (blink) {
         if (BLACK_STONE==stoneArray[i]){
@@ -87,7 +87,7 @@ void turnUpdate(void){ /////////////////////////////////////// score ///////////
   }
   else {
     arduboy.fillRect(0,0,26,64,0);
-    if((game!=CHESS)&&(game!=GO)){ //we don't knows who's turn it is in this game
+    if((game!=CHESS)&&(game!=GO)){ //we don't knows who's turn it is in those games
       if (p1Playing){
         arduboy.setCursor(1,6);
         arduboy.print(F("P1's"));
@@ -111,7 +111,7 @@ void turnUpdate(void){ /////////////////////////////////////// score ///////////
       arduboy.setCursor(1,30);
       arduboy.print(F("Removing"));
     }
-    arduboy.drawCircle(22,27,3,1);
+    arduboy.drawCircle(22,27,3,1); // to picture the remaining (or placed) stones
     arduboy.fillCircle(22,60,3,1);
   }
 }

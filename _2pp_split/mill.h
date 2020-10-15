@@ -222,7 +222,7 @@ void playMill(){
                 removing=true;
               }
               else{
-                arduboy.print("Can't remove Stone");
+                arduboy.print(F("Can't remove Stone"));
                 arduboy.display();
                 delay(2000);
                 p1Playing=false;
@@ -240,7 +240,7 @@ void playMill(){
                 removing=true;
               }
               else{
-                arduboy.print("Can't remove Stone");
+                arduboy.print(F("Can't remove Stone"));
                 arduboy.display();
                 delay(2000);
                 p1Playing=false;
@@ -270,10 +270,9 @@ void playMill(){
                 removing=true;
               }
               else{
-                arduboy.print("no stone available");
+                arduboy.print(F("no stone available"));
                 arduboy.display();
-                delay(2000);
-                p1Playing=!p1Playing;
+                delay(2000);                
               }
             }
             if (checkLose(p1Playing? WHITE_STONE : BLACK_STONE)){
@@ -281,8 +280,8 @@ void playMill(){
               drawStones();
               arduboy.print("Player");
               arduboy.println(p1Playing? 2:1);
-              arduboy.println("can't move");
-              arduboy.println("");
+              arduboy.println(F("can't move\n"));
+              //arduboy.println("");
               arduboy.print("Player");
               arduboy.println(p1Playing? 1:2);
               arduboy.println("won !");
