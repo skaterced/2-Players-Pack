@@ -10,11 +10,12 @@ Arduboy2 arduboy;
 #define MENU2 1
 #define PONG 2
 #define TRACE 3
-#define REFLX 4
+#define MAZE 4
 #define MEMO 5
 #define MILL 6
 #define GO 7
 #define CHESS 8
+#define REFLX 9
 
 #define BLACK_STONE 1 // (P1)
 #define WHITE_STONE 2 // (P2)
@@ -36,14 +37,15 @@ bool selected=false; //MILL and MEMO - when a player has selected something - Re
 int8_t selectedI=-1;
 bool removing=false;
 bool blink=true;
-uint8_t blinkTimer=0;
+uint8_t blinkTimer=10;
 uint8_t casesLength=8;
 uint8_t casesHeight=11;
 uint8_t casesCol=7+difficulty;
 uint8_t casesRow=2+difficulty;
 int leftBorder=30;
 int upBorder=-1;
-
+int adjSelectX=0;
+int adjSelectY=0;
 uint8_t stoneArray [81];
 
 

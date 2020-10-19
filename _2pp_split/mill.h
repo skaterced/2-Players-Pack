@@ -20,7 +20,7 @@ void drawMill(void){
 }
 
 bool checkMill(int ind, int color){ //check if same line (or col) as ind, has two other same colored stones
-  uint8_t xR,xC=0;
+  uint8_t xR=0,xC=0;  //There you were you filthy bug!
   //int temp=0;
   for (int i=0; i<49; i++){ // check col.
     if (ind%7==i%7){
@@ -298,11 +298,11 @@ void playMill(){
     drawMill();
     turnUpdate();
     drawStones();
- 
+ /*
     if (blinkTimer++>10){
       blinkTimer=0;
       blink=!blink;
-    }
+    }*/
     drawSelector(getIndice(p1.x,p1.y));    
 /*    if (temp>48)
       temp=0;  // whqt was the use again? */  

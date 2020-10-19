@@ -47,6 +47,7 @@
 #include "pong.h"
 #include "trace.h"
 #include "reflx.h"
+#include "maze.h"
 #include "memo.h"
 #include "mill.h"
 #include "chess.h"
@@ -55,7 +56,7 @@
 #include "globals.h"
 #include "function.h" 
 
-#define NBGAMES 7
+#define NBGAMES 8
  
 const unsigned char PROGMEM picture[] =
 {
@@ -123,6 +124,12 @@ void setup() { // SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS  Setup
       chessSetup();
     }
   #endif
+  
+  #ifdef maze_h
+    else if (MAZE==game){
+      mazeSetup();
+    }
+  #endif  
 }
  
 void loop() { // -------------------------  Init loop -------------------------------------------------------------------------
@@ -135,8 +142,9 @@ void loop() { // -------------------------  Init loop --------------------------
     
   arduboy.pollButtons();    
     
-  if ((MENU==game)||(MENU2==game)||(PONG==game)||(MILL==game)||(GO==game)){
-    arduboy.clear(); //in other words: IF NOT MEMO or pong
+  //if ((MENU==game)||(MENU2==game)||(PONG==game)||(MILL==game)||(GO==game)){ //in other words: IF NOT MEMO
+  if (MEMO!=game){
+    arduboy.clear(); 
   }
   if (MENU==game){  
     timer++;
@@ -150,8 +158,8 @@ void loop() { // -------------------------  Init loop --------------------------
       case (TRACE):
         arduboy.print("  <-  Trace ->");
       break;
-      case (REFLX):
-        arduboy.print("  <-  ReflX ->");
+      case (MAZE):
+        arduboy.print("  <-  Maze ->");
       break;
       case (MEMO):
         arduboy.print("  <-  Memo  ->");
@@ -163,7 +171,10 @@ void loop() { // -------------------------  Init loop --------------------------
         arduboy.print("  <-   Go   ->");
       break;   
       case (CHESS):
-        arduboy.print("  <-  Chess");
+        arduboy.print("  <-  Chess ->");
+      break;      
+      case (REFLX):
+        arduboy.print("  <-  ReflX");
       break;      
     }
     //arduboy.print(TRACE_FPS);
@@ -290,16 +301,22 @@ void loop() { // -------------------------  Init loop --------------------------
   
   #ifdef go_h
     else if (GO==game){  // -----------------++--+--++-+-------+-----+-+----++ GO ++--+-++--++--++--+---++-++
-      arduboy.clear();
+      //arduboy.clear();
       playGo();
     }
   #endif
   #ifdef chess_h
     else if (CHESS==game){  // ######################################################### Chess ###############################
-      arduboy.clear();
+      //arduboy.clear();
       playChess();
     }
   #endif
+  #ifdef maze_h
+    else if (MAZE==game){  // _____________________|     |___________| Maze |___________|    |______________________________|
+      //arduboy.clear();
+      playMaze();
+    }
+  #endif  
   else {
     arduboy.setCursor(0,0);
     arduboy.println("please recompile with");

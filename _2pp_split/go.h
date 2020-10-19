@@ -85,11 +85,12 @@ void playGo(){
     drawGo();
     turnUpdate();
     drawStones();
- 
+
+ /*
     if (blinkTimer++>10){
       blinkTimer=0;
       blink=!blink;
-    }
+    }*/
     drawSelector(getIndice(p1.x,p1.y));
     
   }

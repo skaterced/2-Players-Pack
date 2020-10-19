@@ -208,11 +208,11 @@ void playChess(){
   for (int i=0; i<NBCHESSPIECES; i++){
     pieces[i].draw();
   }
-  
+  /*
   if (blinkTimer++>10){
     blinkTimer=0;
     blink=!blink;
-  }
+  }//inside drawSelector */
   drawSelector(getIndice(p1.x,p1.y));
   arduboy.drawLine(33,0,33,64,1);   
 }

@@ -65,9 +65,16 @@ void SelectorManagment(void){
     }
 }
 void drawSelector(int i){
+
+   if (blinkTimer--==0){
+    blinkTimer=10;
+    blink=!blink;
+  }  
   int x=(i%casesCol)*casesLength+leftBorder;
   int y=(i/casesCol)*casesHeight+upBorder;
-  arduboy.drawLine(x-4,y-4,x-2,y-2,blink? 1:0);
+  x+=adjSelectX;
+  y+=adjSelectY;
+  arduboy.drawLine(x-4,y-4,x-2,y-2,blink? 1:0);  // Why not add a variable to adjust the Selector for each game? todo?
   arduboy.drawLine(x-4,y+4,x-2,y+2,blink? 1:0);
   arduboy.drawLine(x+2,y+2,x+4,y+4,blink? 1:0);
   arduboy.drawLine(x+2,y-2,x+4,y-4,blink? 1:0);
